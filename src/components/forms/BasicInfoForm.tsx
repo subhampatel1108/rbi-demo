@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Report } from '@/components/ReportManagement';
 
 interface BasicInfoFormProps {
@@ -14,27 +13,6 @@ interface BasicInfoFormProps {
 export const BasicInfoForm = ({ formData, setFormData }: BasicInfoFormProps) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="id">Report ID</Label>
-          <Input
-            id="id"
-            value={formData.id}
-            onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="report_name">Report Name</Label>
-          <Input
-            id="report_name"
-            value={formData.report_name}
-            onChange={(e) => setFormData({ ...formData, report_name: e.target.value })}
-            required
-          />
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="fraud_type">Fraud Type</Label>
@@ -72,16 +50,6 @@ export const BasicInfoForm = ({ formData, setFormData }: BasicInfoFormProps) => 
           id="reason_to_flag"
           value={formData.reason_to_flag}
           onChange={(e) => setFormData({ ...formData, reason_to_flag: e.target.value })}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="action_taken">Action Taken</Label>
-        <Textarea
-          id="action_taken"
-          value={formData.action_taken}
-          onChange={(e) => setFormData({ ...formData, action_taken: e.target.value })}
           required
         />
       </div>
