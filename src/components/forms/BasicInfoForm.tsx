@@ -60,18 +60,6 @@ export const BasicInfoForm = ({ formData, setFormData }: BasicInfoFormProps) => 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="linked_report_ids">Linked Report IDs (comma separated)</Label>
-        <Input
-          id="linked_report_ids"
-          value={formData.linked_report_ids.join(', ')}
-          onChange={(e) => setFormData({ 
-            ...formData, 
-            linked_report_ids: e.target.value.split(',').map(id => id.trim()).filter(id => id)
-          })}
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="reason_to_flag">Reason to Flag</Label>
         <Textarea
           id="reason_to_flag"
