@@ -63,17 +63,17 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Party Roles</h3>
+        <h3 className="text-lg font-semibold">Source Details</h3>
         <Button type="button" onClick={addPartyRole} size="sm">
           <Plus className="h-4 w-4 mr-2" />
-          Add Party
+          Add Source
         </Button>
       </div>
 
       {formData.party_roles.map((party, index) => (
         <Card key={index}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Party {index + 1}</CardTitle>
+            <CardTitle className="text-sm">Source {index + 1}</CardTitle>
             {formData.party_roles.length > 1 && (
               <Button
                 type="button"
@@ -98,49 +98,6 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
                   }}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select 
-                  value={party.role} 
-                  onValueChange={(value) => {
-                    const newParties = [...formData.party_roles];
-                    newParties[index].role = value;
-                    setFormData({ ...formData, party_roles: newParties });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SOURCE">Source</SelectItem>
-                    <SelectItem value="CHANNEL">Channel</SelectItem>
-                    <SelectItem value="VALIDATOR">Validator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select 
-                  value={party.status} 
-                  onValueChange={(value) => {
-                    const newParties = [...formData.party_roles];
-                    newParties[index].status = value;
-                    setFormData({ ...formData, party_roles: newParties });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="PENDING_VERIFICATION">Pending Verification</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Source Name</Label>
                 <Input
@@ -172,17 +129,18 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <Input
-                  value={party.metadata.location}
-                  onChange={(e) => {
-                    const newParties = [...formData.party_roles];
-                    newParties[index].metadata.location = e.target.value;
-                    setFormData({ ...formData, party_roles: newParties });
-                  }}
-                />
-              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <Input
+                value={party.metadata.location}
+                onChange={(e) => {
+                  const newParties = [...formData.party_roles];
+                  newParties[index].metadata.location = e.target.value;
+                  setFormData({ ...formData, party_roles: newParties });
+                }}
+              />
             </div>
 
             <h4 className="text-md font-semibold">Principal Officer</h4>
@@ -262,20 +220,6 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
                 />
               </div>
               <div className="space-y-2">
-                <Label>FIU ID</Label>
-                <Input
-                  value={party.metadata.branch.branch_fiu_id}
-                  onChange={(e) => {
-                    const newParties = [...formData.party_roles];
-                    newParties[index].metadata.branch.branch_fiu_id = e.target.value;
-                    setFormData({ ...formData, party_roles: newParties });
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
                 <Label>IFSC Code</Label>
                 <Input
                   value={party.metadata.branch.branch_ifsc_code}
@@ -286,6 +230,9 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
                   }}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>City</Label>
                 <Input
@@ -308,9 +255,6 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
                   }}
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>PIN Code</Label>
                 <Input
@@ -321,26 +265,6 @@ export const PartyRoleForm = ({ formData, setFormData }: PartyRoleFormProps) => 
                     setFormData({ ...formData, party_roles: newParties });
                   }}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label>Report Format</Label>
-                <Select 
-                  value={party.metadata.report_format} 
-                  onValueChange={(value) => {
-                    const newParties = [...formData.party_roles];
-                    newParties[index].metadata.report_format = value;
-                    setFormData({ ...formData, party_roles: newParties });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="STR">STR</SelectItem>
-                    <SelectItem value="CTR">CTR</SelectItem>
-                    <SelectItem value="NTR">NTR</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </CardContent>

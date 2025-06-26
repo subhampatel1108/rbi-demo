@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,10 +6,9 @@ import { ArrowLeft } from 'lucide-react';
 import { Report } from '@/components/ReportManagement';
 import { BasicInfoForm } from './forms/BasicInfoForm';
 import { SuspectIdentifierForm } from './forms/SuspectIdentifierForm';
-import { MetadataForm } from './forms/MetadataForm';
 import { PartyRoleForm } from './forms/PartyRoleForm';
 import { EntityForm } from './forms/EntityForm';
-import { RulesForm } from './forms/RulesForm';
+import { MetadataForm } from './forms/MetadataForm';
 
 interface CreateReportFormProps {
   onSubmit: (report: Omit<Report, 'created_at'>) => void;
@@ -167,13 +165,12 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="identifiers">Identifiers</TabsTrigger>
-                <TabsTrigger value="metadata">Metadata</TabsTrigger>
-                <TabsTrigger value="parties">Parties</TabsTrigger>
+                <TabsTrigger value="sources">Source Details</TabsTrigger>
                 <TabsTrigger value="entities">Entities</TabsTrigger>
-                <TabsTrigger value="rules">Rules</TabsTrigger>
+                <TabsTrigger value="metadata">Metadata</TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
@@ -184,11 +181,7 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
                 <SuspectIdentifierForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
-              <TabsContent value="metadata" className="space-y-4">
-                <MetadataForm formData={formData} setFormData={handleFormDataUpdate} />
-              </TabsContent>
-
-              <TabsContent value="parties" className="space-y-4">
+              <TabsContent value="sources" className="space-y-4">
                 <PartyRoleForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
@@ -196,8 +189,8 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
                 <EntityForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
-              <TabsContent value="rules" className="space-y-4">
-                <RulesForm formData={formData} setFormData={handleFormDataUpdate} />
+              <TabsContent value="metadata" className="space-y-4">
+                <MetadataForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
             </Tabs>
 
