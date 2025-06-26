@@ -132,7 +132,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Recommended Status</Label>
                 <Select value={identifier.recommended_status} onValueChange={(value) => updateSuspectIdentifier(index, 'recommended_status', value)}>
@@ -159,30 +159,6 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                     <SelectItem value="Credit Card">Credit Card</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Rule ID</Label>
-                <Input
-                  value={identifier.rule_id || ''}
-                  onChange={(e) => updateSuspectIdentifier(index, 'rule_id', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Linked Entity ID</Label>
-                <Input
-                  value={identifier.linked_entity_id}
-                  onChange={(e) => updateSuspectIdentifier(index, 'linked_entity_id', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Linked Parties (comma separated)</Label>
-                <Input
-                  value={identifier.linked_parties.join(', ')}
-                  onChange={(e) => updateSuspectIdentifier(index, 'linked_parties', e.target.value.split(',').map(p => p.trim()).filter(p => p))}
-                />
               </div>
             </div>
 
@@ -211,23 +187,12 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>IP Address</Label>
                 <Input
                   value={identifier.metadata.ip_address || ''}
                   onChange={(e) => updateSuspectIdentifier(index, 'metadata.ip_address', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Confidence Score</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="1"
-                  value={identifier.metadata.confidence_score || 0}
-                  onChange={(e) => updateSuspectIdentifier(index, 'metadata.confidence_score', Number(e.target.value))}
                 />
               </div>
               <div className="space-y-2">

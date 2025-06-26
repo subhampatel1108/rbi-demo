@@ -72,7 +72,7 @@ export const EntityForm = ({ formData, setFormData }: EntityFormProps) => {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Entity ID</Label>
                 <Input
@@ -99,21 +99,10 @@ export const EntityForm = ({ formData, setFormData }: EntityFormProps) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+                    <SelectItem value="BUSINESS">Business</SelectItem>
                     <SelectItem value="MERCHANT">Merchant</SelectItem>
-                    <SelectItem value="ORGANIZATION">Organization</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Parent Entity</Label>
-                <Input
-                  value={entity.parent_entity || ''}
-                  onChange={(e) => {
-                    const newEntities = [...formData.entities];
-                    newEntities[index].parent_entity = e.target.value;
-                    setFormData({ ...formData, entities: newEntities });
-                  }}
-                />
               </div>
             </div>
 
@@ -129,103 +118,95 @@ export const EntityForm = ({ formData, setFormData }: EntityFormProps) => {
               />
             </div>
 
-            {entity.entity_type === 'INDIVIDUAL' && (
-              <>
-                <h4 className="text-md font-semibold">Individual Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Full Name</Label>
-                    <Input
-                      value={entity.metadata.full_name || ''}
-                      onChange={(e) => {
-                        const newEntities = [...formData.entities];
-                        newEntities[index].metadata.full_name = e.target.value;
-                        setFormData({ ...formData, entities: newEntities });
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Date of Birth</Label>
-                    <Input
-                      type="date"
-                      value={entity.metadata.dob || ''}
-                      onChange={(e) => {
-                        const newEntities = [...formData.entities];
-                        newEntities[index].metadata.dob = e.target.value;
-                        setFormData({ ...formData, entities: newEntities });
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Nationality</Label>
-                    <Input
-                      value={entity.metadata.nationality || ''}
-                      onChange={(e) => {
-                        const newEntities = [...formData.entities];
-                        newEntities[index].metadata.nationality = e.target.value;
-                        setFormData({ ...formData, entities: newEntities });
-                      }}
-                    />
-                  </div>
+            <h4 className="text-md font-semibold">Metadata</h4>
+            {entity.entity_type === 'BUSINESS' || entity.entity_type === 'MERCHANT' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Business Name</Label>
+                  <Input
+                    value={entity.metadata.business_name || ''}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.business_name = e.target.value;
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
                 </div>
-              </>
-            )}
-
-            {(entity.entity_type === 'MERCHANT' || entity.entity_type === 'ORGANIZATION') && (
-              <>
-                <h4 className="text-md font-semibold">Business Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Business Name</Label>
-                    <Input
-                      value={entity.metadata.business_name || ''}
-                      onChange={(e) => {
-                        const newEntities = [...formData.entities];
-                        newEntities[index].metadata.business_name = e.target.value;
-                        setFormData({ ...formData, entities: newEntities });
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Registration Number</Label>
-                    <Input
-                      value={entity.metadata.registration_number || ''}
-                      onChange={(e) => {
-                        const newEntities = [...formData.entities];
-                        newEntities[index].metadata.registration_number = e.target.value;
-                        setFormData({ ...formData, entities: newEntities });
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Jurisdiction</Label>
-                    <Input
-                      value={entity.metadata.jurisdiction || ''}
-                      onChange={(e) => {
-                        const newEntities = [...formData.entities];
-                        newEntities[index].metadata.jurisdiction = e.target.value;
-                        setFormData({ ...formData, entities: newEntities });
-                      }}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Registration Number</Label>
+                  <Input
+                    value={entity.metadata.registration_number || ''}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.registration_number = e.target.value;
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
                 </div>
-              </>
+                <div className="space-y-2">
+                  <Label>Jurisdiction</Label>
+                  <Input
+                    value={entity.metadata.jurisdiction || ''}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.jurisdiction = e.target.value;
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Risk Score</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={entity.metadata.risk_score || 0}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.risk_score = Number(e.target.value);
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Full Name</Label>
+                  <Input
+                    value={entity.metadata.full_name || ''}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.full_name = e.target.value;
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Date of Birth</Label>
+                  <Input
+                    type="date"
+                    value={entity.metadata.dob || ''}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.dob = e.target.value;
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Nationality</Label>
+                  <Input
+                    value={entity.metadata.nationality || ''}
+                    onChange={(e) => {
+                      const newEntities = [...formData.entities];
+                      newEntities[index].metadata.nationality = e.target.value;
+                      setFormData({ ...formData, entities: newEntities });
+                    }}
+                  />
+                </div>
+              </div>
             )}
-
-            <div className="space-y-2">
-              <Label>Risk Score</Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={entity.metadata.risk_score || 0}
-                onChange={(e) => {
-                  const newEntities = [...formData.entities];
-                  newEntities[index].metadata.risk_score = Number(e.target.value);
-                  setFormData({ ...formData, entities: newEntities });
-                }}
-              />
-            </div>
           </CardContent>
         </Card>
       ))}
