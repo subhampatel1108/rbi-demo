@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,10 +119,18 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
     
     if (field.includes('metadata.')) {
       const metadataField = field.replace('metadata.', '');
-      entity.metadata = {
-        ...entity.metadata,
-        [metadataField]: value
-      };
+      // Handle number conversion for risk_score
+      if (metadataField === 'risk_score') {
+        entity.metadata = {
+          ...entity.metadata,
+          [metadataField]: Number(value)
+        };
+      } else {
+        entity.metadata = {
+          ...entity.metadata,
+          [metadataField]: value
+        };
+      }
     } else {
       entity[field as keyof Entity] = value;
     }
@@ -231,7 +238,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
 
             {/* Identifier Metadata */}
             <h4 className="text-md font-semibold mt-4">Identifier Metadata</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Geo Tag</Label>
                 <Input
@@ -244,6 +251,16 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                 <Input
                   value={identifier.metadata.device_id || ''}
                   onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.device_id', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Confidence Score</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={identifier.metadata.confidence_score || 0}
+                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.confidence_score', Number(e.target.value))}
                 />
               </div>
             </div>
@@ -305,7 +322,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                     </div>
 
                     {entity.entity_type === 'BUSINESS' || entity.entity_type === 'MERCHANT' ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="space-y-2">
                           <Label className="text-xs">Business Name</Label>
                           <Input
@@ -320,6 +337,17 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                             size="sm"
                             value={entity.metadata.registration_number || ''}
                             onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.registration_number', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Risk Score</Label>
+                          <Input
+                            type="number"
+                            size="sm"
+                            min="0"
+                            max="100"
+                            value={entity.metadata.risk_score || 0}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.risk_score', e.target.value)}
                           />
                         </div>
                       </div>

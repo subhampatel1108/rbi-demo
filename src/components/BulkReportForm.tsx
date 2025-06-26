@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -136,7 +135,6 @@ const BulkReportForm = ({ onSubmit, onCancel }: BulkReportFormProps) => {
           },
           reported_at: new Date().toISOString(),
           party_roles: [],
-          entities: [],
           rules: []
         };
 
