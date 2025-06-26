@@ -14,10 +14,19 @@ interface ReportDetailsProps {
 const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Open': return 'bg-red-100 text-red-800';
-      case 'Under Investigation': return 'bg-yellow-100 text-yellow-800';
-      case 'Resolved': return 'bg-green-100 text-green-800';
-      case 'Closed': return 'bg-gray-100 text-gray-800';
+      case 'ACTIVE': return 'bg-green-100 text-green-800';
+      case 'BLOCKED': return 'bg-red-100 text-red-800';
+      case 'SUSPENDED': return 'bg-yellow-100 text-yellow-800';
+      case 'CLOSED': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'HIGH': return 'bg-red-100 text-red-800';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+      case 'LOW': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -32,11 +41,11 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
     });
   };
 
-  const formatMetadata = (metadata: string) => {
+  const formatMetadata = (metadata: any) => {
     try {
-      return JSON.stringify(JSON.parse(metadata), null, 2);
+      return JSON.stringify(metadata, null, 2);
     } catch {
-      return metadata;
+      return 'Unable to display metadata';
     }
   };
 
@@ -57,11 +66,16 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
                 <FileText className="h-5 w-5" />
                 <span>Report Details</span>
               </CardTitle>
-              <CardDescription>Fraud ID: {report.fraudId}</CardDescription>
+              <CardDescription>Report ID: {report.id}</CardDescription>
             </div>
-            <Badge className={getStatusColor(report.status)}>
-              {report.status}
-            </Badge>
+            <div className="flex space-x-2">
+              <Badge className={getStatusColor(report.reported_identifier_status)}>
+                {report.reported_identifier_status}
+              </Badge>
+              <Badge className={getSeverityColor(report.reported_severity)}>
+                {report.reported_severity}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -70,17 +84,25 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
               <div>
                 <div className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                   <Hash className="h-4 w-4" />
-                  <span>Fraud ID</span>
+                  <span>Report ID</span>
                 </div>
-                <p className="text-gray-900 font-mono">{report.fraudId}</p>
+                <p className="text-gray-900 font-mono">{report.id}</p>
+              </div>
+
+              <div>
+                <div className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
+                  <FileText className="h-4 w-4" />
+                  <span>Report Name</span>
+                </div>
+                <p className="text-gray-900">{report.report_name}</p>
               </div>
 
               <div>
                 <div className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                   <Tag className="h-4 w-4" />
-                  <span>ID Type</span>
+                  <span>Fraud Type</span>
                 </div>
-                <p className="text-gray-900">{report.idType}</p>
+                <p className="text-gray-900">{report.fraud_type}</p>
               </div>
 
               <div>
@@ -88,18 +110,43 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
                   <Calendar className="h-4 w-4" />
                   <span>Created</span>
                 </div>
-                <p className="text-gray-900">{formatDate(report.createdAt)}</p>
+                <p className="text-gray-900">{formatDate(report.created_at)}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Description</h4>
-                <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{report.description}</p>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Reason to Flag</h4>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{report.reason_to_flag}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Action Taken</h4>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{report.action_taken || 'No action taken yet'}</p>
               </div>
             </div>
           </div>
 
+          {/* Suspect Identifiers */}
+          {report.suspect_identifiers && report.suspect_identifiers.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Suspect Identifiers</h4>
+              <div className="space-y-3">
+                {report.suspect_identifiers.map((identifier, index) => (
+                  <div key={index} className="border rounded-md p-3 bg-gray-50">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div><strong>Identity:</strong> {identifier.identity}</div>
+                      <div><strong>Type:</strong> {identifier.identity_type}</div>
+                      <div><strong>Status:</strong> {identifier.status}</div>
+                      <div><strong>Fraud Type:</strong> {identifier.fraud_type}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Metadata */}
           {report.metadata && (
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">Metadata</h4>

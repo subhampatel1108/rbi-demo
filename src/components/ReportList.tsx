@@ -15,10 +15,19 @@ interface ReportListProps {
 const ReportList = ({ reports, onViewReport }: ReportListProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Open': return 'bg-red-100 text-red-800';
-      case 'Under Investigation': return 'bg-yellow-100 text-yellow-800';
-      case 'Resolved': return 'bg-green-100 text-green-800';
-      case 'Closed': return 'bg-gray-100 text-gray-800';
+      case 'ACTIVE': return 'bg-green-100 text-green-800';
+      case 'BLOCKED': return 'bg-red-100 text-red-800';
+      case 'SUSPENDED': return 'bg-yellow-100 text-yellow-800';
+      case 'CLOSED': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'HIGH': return 'bg-red-100 text-red-800';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+      case 'LOW': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -37,9 +46,10 @@ const ReportList = ({ reports, onViewReport }: ReportListProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Fraud ID</TableHead>
-              <TableHead>ID Type</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead>Report ID</TableHead>
+              <TableHead>Report Name</TableHead>
+              <TableHead>Fraud Type</TableHead>
+              <TableHead>Severity</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Actions</TableHead>
@@ -48,15 +58,20 @@ const ReportList = ({ reports, onViewReport }: ReportListProps) => {
           <TableBody>
             {reports.map((report) => (
               <TableRow key={report.id}>
-                <TableCell className="font-medium">{report.fraudId}</TableCell>
-                <TableCell>{report.idType}</TableCell>
-                <TableCell className="max-w-xs truncate">{report.description}</TableCell>
+                <TableCell className="font-medium">{report.id}</TableCell>
+                <TableCell>{report.report_name}</TableCell>
+                <TableCell>{report.fraud_type}</TableCell>
                 <TableCell>
-                  <Badge className={getStatusColor(report.status)}>
-                    {report.status}
+                  <Badge className={getSeverityColor(report.reported_severity)}>
+                    {report.reported_severity}
                   </Badge>
                 </TableCell>
-                <TableCell>{formatDate(report.createdAt)}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(report.reported_identifier_status)}>
+                    {report.reported_identifier_status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{formatDate(report.created_at)}</TableCell>
                 <TableCell>
                   <Button
                     variant="outline"

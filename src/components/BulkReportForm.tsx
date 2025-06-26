@@ -9,19 +9,19 @@ import { Report } from '@/components/ReportManagement';
 import { useToast } from '@/components/ui/use-toast';
 
 interface BulkReportFormProps {
-  onSubmit: (reports: Omit<Report, 'id' | 'createdAt'>[]) => void;
+  onSubmit: (reports: Omit<Report, 'created_at'>[]) => void;
   onCancel: () => void;
 }
 
 const BulkReportForm = ({ onSubmit, onCancel }: BulkReportFormProps) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [parsedReports, setParsedReports] = useState<Omit<Report, 'id' | 'createdAt'>[]>([]);
+  const [parsedReports, setParsedReports] = useState<Omit<Report, 'created_at'>[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const downloadTemplate = () => {
-    const csvContent = 'fraudId,idType,metadata,status,description\nFRD-001,SSN,"{""ip"": ""192.168.1.1"", ""device"": ""mobile""}",Open,Suspicious transaction detected\nFRD-002,Email,"{""location"": ""NYC"", ""amount"": ""$500""}",Under Investigation,Multiple failed login attempts';
+    const csvContent = 'id,report_name,fraud_type,reported_severity,reason_to_flag\nREPORT001,Sample Fraud Report,ACH,HIGH,Suspicious activity detected\nREPORT002,Another Report,UPI,MEDIUM,Multiple failed transactions';
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -60,7 +60,7 @@ const BulkReportForm = ({ onSubmit, onCancel }: BulkReportFormProps) => {
       }
 
       const headers = lines[0].split(',').map(h => h.trim());
-      const expectedHeaders = ['fraudId', 'idType', 'metadata', 'status', 'description'];
+      const expectedHeaders = ['id', 'report_name', 'fraud_type', 'reported_severity', 'reason_to_flag'];
       
       const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
       if (missingHeaders.length > 0) {
@@ -68,7 +68,7 @@ const BulkReportForm = ({ onSubmit, onCancel }: BulkReportFormProps) => {
         return;
       }
 
-      const reports: Omit<Report, 'id' | 'createdAt'>[] = [];
+      const reports: Omit<Report, 'created_at'>[] = [];
       const parseErrors: string[] = [];
 
       for (let i = 1; i < lines.length; i++) {
@@ -79,32 +79,68 @@ const BulkReportForm = ({ onSubmit, onCancel }: BulkReportFormProps) => {
           continue;
         }
 
-        const report: any = {};
+        const reportData: any = {};
         headers.forEach((header, index) => {
-          report[header] = values[index];
+          reportData[header] = values[index];
         });
 
         // Validate required fields
-        if (!report.fraudId) {
-          parseErrors.push(`Row ${i + 1}: fraudId is required`);
+        if (!reportData.id || !reportData.report_name) {
+          parseErrors.push(`Row ${i + 1}: id and report_name are required`);
           continue;
         }
 
-        // Validate status
-        const validStatuses = ['Open', 'Under Investigation', 'Resolved', 'Closed'];
-        if (!validStatuses.includes(report.status)) {
-          parseErrors.push(`Row ${i + 1}: Invalid status. Must be one of: ${validStatuses.join(', ')}`);
-          continue;
-        }
+        // Create a complete report object with default values
+        const report: Omit<Report, 'created_at'> = {
+          id: reportData.id,
+          report_name: reportData.report_name,
+          suspect_identifiers: [],
+          report_type: 'creation',
+          fraud_type: reportData.fraud_type || 'ACH',
+          reported_identifier_status: 'ACTIVE',
+          reported_severity: reportData.reported_severity || 'MEDIUM',
+          report_object_url: {},
+          reason_to_flag: reportData.reason_to_flag || '',
+          action_taken: '',
+          linked_report_ids: [],
+          metadata: {
+            reported_by_customer: false,
+            attempted_fraud: false,
+            instrument_used: '',
+            payment_system_category: '',
+            system_involved: '',
+            payment_channel: '',
+            nature_of_transaction: '',
+            utr: '',
+            amount_involved: 0,
+            amount_recovered: 0,
+            insurance_covered: false,
+            is_domestic: true,
+            occurrence_date_by_entity: '',
+            detection_date_by_entity: '',
+            entry_date_by_entity: '',
+            report_date_by_customer: '',
+            time_of_occurrence: '',
+            beneficiary: {
+              name: '',
+              upi_id: '',
+              bank: '',
+              account_number: '',
+              ifsc: ''
+            },
+            registered_with_lea: false,
+            lea_case_details: '',
+            is_closed: false,
+            modus_operandi: [],
+            future_steps: ''
+          },
+          reported_at: new Date().toISOString(),
+          party_roles: [],
+          entities: [],
+          rules: []
+        };
 
-        // Validate idType
-        const validIdTypes = ['SSN', 'Email', 'Phone', 'Credit Card', 'Bank Account'];
-        if (!validIdTypes.includes(report.idType)) {
-          parseErrors.push(`Row ${i + 1}: Invalid idType. Must be one of: ${validIdTypes.join(', ')}`);
-          continue;
-        }
-
-        reports.push(report as Omit<Report, 'id' | 'createdAt'>);
+        reports.push(report);
       }
 
       setErrors(parseErrors);
@@ -235,19 +271,19 @@ const BulkReportForm = ({ onSubmit, onCancel }: BulkReportFormProps) => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-green-200">
-                      <th className="text-left p-2">Fraud ID</th>
-                      <th className="text-left p-2">ID Type</th>
-                      <th className="text-left p-2">Status</th>
-                      <th className="text-left p-2">Description</th>
+                      <th className="text-left p-2">Report ID</th>
+                      <th className="text-left p-2">Report Name</th>
+                      <th className="text-left p-2">Fraud Type</th>
+                      <th className="text-left p-2">Severity</th>
                     </tr>
                   </thead>
                   <tbody>
                     {parsedReports.slice(0, 5).map((report, index) => (
                       <tr key={index} className="border-b border-green-100">
-                        <td className="p-2">{report.fraudId}</td>
-                        <td className="p-2">{report.idType}</td>
-                        <td className="p-2">{report.status}</td>
-                        <td className="p-2 truncate max-w-32">{report.description}</td>
+                        <td className="p-2">{report.id}</td>
+                        <td className="p-2">{report.report_name}</td>
+                        <td className="p-2">{report.fraud_type}</td>
+                        <td className="p-2">{report.reported_severity}</td>
                       </tr>
                     ))}
                   </tbody>
