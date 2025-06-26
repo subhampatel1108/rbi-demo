@@ -20,13 +20,24 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
       const [parent, child] = field.split('.');
       const currentIdentifier = newIdentifiers[index];
       const parentObj = currentIdentifier[parent as keyof SuspectIdentifier];
-      newIdentifiers[index] = {
-        ...currentIdentifier,
-        [parent]: {
-          ...(typeof parentObj === 'object' && parentObj !== null ? parentObj as Record<string, any> : {}),
-          [child]: value
-        }
-      };
+      
+      if (parent === 'metadata' && child === 'confidence_score') {
+        newIdentifiers[index] = {
+          ...currentIdentifier,
+          [parent]: {
+            ...(typeof parentObj === 'object' && parentObj !== null ? parentObj as Record<string, any> : {}),
+            [child]: typeof value === 'string' ? (Number(value) || 0) : value
+          }
+        };
+      } else {
+        newIdentifiers[index] = {
+          ...currentIdentifier,
+          [parent]: {
+            ...(typeof parentObj === 'object' && parentObj !== null ? parentObj as Record<string, any> : {}),
+            [child]: value
+          }
+        };
+      }
     } else {
       newIdentifiers[index] = { ...newIdentifiers[index], [field]: value };
     }
