@@ -124,7 +124,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
       if (metadataField === 'risk_score') {
         entity.metadata = {
           ...entity.metadata,
-          [metadataField]: Number(value)
+          [metadataField]: typeof value === 'string' ? (Number(value) || 0) : value
         };
       } else {
         entity.metadata = {
