@@ -412,13 +412,6 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
                             </Badge>
                           </div>
                         )}
-                        
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                          <div className="text-xs text-gray-500 mb-2">Raw JSON Preview:</div>
-                          <pre className="text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap max-h-32 overflow-y-auto">
-                            {formatMetadata(report.metadata).slice(0, 200)}...
-                          </pre>
-                        </div>
                       </div>
                     )}
                   </CardContent>
