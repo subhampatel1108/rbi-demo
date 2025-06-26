@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,7 +140,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Suspect Identifiers & Associated Entities</h3>
         <Button type="button" onClick={addSuspectIdentifier} size="sm">
@@ -150,9 +151,9 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
 
       {formData.suspect_identifiers.map((identifier, identifierIndex) => (
         <Card key={identifierIndex} className="border-2">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <User className="h-4 w-4" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="h-5 w-5" />
               Identifier {identifierIndex + 1}
             </CardTitle>
             {formData.suspect_identifiers.length > 1 && (
@@ -166,107 +167,128 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
               </Button>
             )}
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Identifier Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Identity</Label>
-                <Input
-                  value={identifier.identity}
-                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'identity', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Identity Type</Label>
-                <Select value={identifier.identity_type} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'identity_type', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PAN">PAN</SelectItem>
-                    <SelectItem value="MOBILE">Mobile</SelectItem>
-                    <SelectItem value="EMAIL">Email</SelectItem>
-                    <SelectItem value="ACCOUNT">Account</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={identifier.status} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'status', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="BLOCKED">Blocked</SelectItem>
-                    <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Recommended Status</Label>
-                <Select value={identifier.recommended_status} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'recommended_status', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FRAUD">Fraud</SelectItem>
-                    <SelectItem value="SUSPICIOUS">Suspicious</SelectItem>
-                    <SelectItem value="CLEAR">Clear</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Fraud Type</Label>
-                <Select value={identifier.fraud_type} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'fraud_type', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="KYC">KYC</SelectItem>
-                    <SelectItem value="UPI">UPI</SelectItem>
-                    <SelectItem value="ACH">ACH</SelectItem>
-                    <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  </SelectContent>
-                </Select>
+          <CardContent className="space-y-6">
+            {/* Basic Identifier Information */}
+            <div className="space-y-4">
+              <h4 className="text-md font-semibold text-gray-700 border-b pb-2">Basic Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Identity *</Label>
+                  <Input
+                    value={identifier.identity}
+                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'identity', e.target.value)}
+                    placeholder="Enter identity value"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Identity Type</Label>
+                  <Select value={identifier.identity_type} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'identity_type', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PAN">PAN</SelectItem>
+                      <SelectItem value="MOBILE">Mobile</SelectItem>
+                      <SelectItem value="EMAIL">Email</SelectItem>
+                      <SelectItem value="ACCOUNT">Account</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Current Status</Label>
+                  <Select value={identifier.status} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="BLOCKED">Blocked</SelectItem>
+                      <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {/* Identifier Metadata */}
-            <h4 className="text-md font-semibold mt-4">Identifier Metadata</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Geo Tag</Label>
-                <Input
-                  value={identifier.metadata.geo_tag || ''}
-                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.geo_tag', e.target.value)}
-                />
+            {/* Risk Assessment */}
+            <div className="space-y-4">
+              <h4 className="text-md font-semibold text-gray-700 border-b pb-2">Risk Assessment</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Recommended Status</Label>
+                  <Select value={identifier.recommended_status} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'recommended_status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FRAUD">Fraud</SelectItem>
+                      <SelectItem value="SUSPICIOUS">Suspicious</SelectItem>
+                      <SelectItem value="CLEAR">Clear</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Fraud Type</Label>
+                  <Select value={identifier.fraud_type} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'fraud_type', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="KYC">KYC</SelectItem>
+                      <SelectItem value="UPI">UPI</SelectItem>
+                      <SelectItem value="ACH">ACH</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Confidence Score</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={identifier.metadata.confidence_score || 0}
+                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.confidence_score', Number(e.target.value))}
+                    placeholder="0-100"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Device ID</Label>
-                <Input
-                  value={identifier.metadata.device_id || ''}
-                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.device_id', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Confidence Score</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={identifier.metadata.confidence_score || 0}
-                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.confidence_score', Number(e.target.value))}
-                />
+            </div>
+
+            {/* Technical Metadata */}
+            <div className="space-y-4">
+              <h4 className="text-md font-semibold text-gray-700 border-b pb-2">Technical Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Geo Tag</Label>
+                  <Input
+                    value={identifier.metadata.geo_tag || ''}
+                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.geo_tag', e.target.value)}
+                    placeholder="Location information"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Device ID</Label>
+                  <Input
+                    value={identifier.metadata.device_id || ''}
+                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.device_id', e.target.value)}
+                    placeholder="Device identifier"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">IP Address</Label>
+                  <Input
+                    value={identifier.metadata.ip_address || ''}
+                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.ip_address', e.target.value)}
+                    placeholder="IP address"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Associated Entities */}
-            <div className="border-t pt-4">
+            <div className="border-t pt-6">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-md font-semibold flex items-center gap-2">
                   <Building className="h-4 w-4" />
@@ -347,7 +369,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                             min="0"
                             max="100"
                             value={entity.metadata.risk_score || 0}
-                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.risk_score', e.target.value)}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.risk_score', Number(e.target.value))}
                           />
                         </div>
                       </div>
