@@ -95,6 +95,43 @@ export const BasicInfoForm = ({ formData, setFormData }: BasicInfoFormProps) => 
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="screenshot_url">Screenshot URL</Label>
+          <Input
+            id="screenshot_url"
+            value={formData.report_object_url.screenshot || ''}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              report_object_url: { ...formData.report_object_url, screenshot: e.target.value }
+            })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pdf_url">PDF URL</Label>
+          <Input
+            id="pdf_url"
+            value={formData.report_object_url.pdf || ''}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              report_object_url: { ...formData.report_object_url, pdf: e.target.value }
+            })}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="linked_report_ids">Linked Report IDs (comma separated)</Label>
+        <Input
+          id="linked_report_ids"
+          value={formData.linked_report_ids.join(', ')}
+          onChange={(e) => setFormData({ 
+            ...formData, 
+            linked_report_ids: e.target.value.split(',').map(id => id.trim()).filter(id => id)
+          })}
+        />
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="reason_to_flag">Reason to Flag</Label>
         <Textarea

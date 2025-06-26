@@ -10,6 +10,7 @@ import { SuspectIdentifierForm } from './forms/SuspectIdentifierForm';
 import { MetadataForm } from './forms/MetadataForm';
 import { PartyRoleForm } from './forms/PartyRoleForm';
 import { EntityForm } from './forms/EntityForm';
+import { RulesForm } from './forms/RulesForm';
 
 interface CreateReportFormProps {
   onSubmit: (report: Omit<Report, 'created_at'>) => void;
@@ -27,15 +28,26 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
       status: 'ACTIVE',
       recommended_status: 'FRAUD',
       fraud_type: 'KYC',
+      rule_id: '',
       linked_entity_id: '',
       linked_parties: [],
-      metadata: {}
+      metadata: {
+        geo_tag: '',
+        device_id: '',
+        imei: '',
+        ip_address: '',
+        confidence_score: 0,
+        date_of_sending_report: ''
+      }
     }],
     report_type: 'creation',
     fraud_type: 'ACH',
     reported_identifier_status: 'ACTIVE',
     reported_severity: 'HIGH',
-    report_object_url: {},
+    report_object_url: {
+      screenshot: '',
+      pdf: ''
+    },
     reason_to_flag: '',
     action_taken: '',
     linked_report_ids: [],
@@ -105,7 +117,17 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
       id: 'ENTITY001',
       entity_type: 'INDIVIDUAL',
       linked_identifiers: [],
-      metadata: {}
+      parent_entity: '',
+      metadata: {
+        business_name: '',
+        registration_number: '',
+        jurisdiction: '',
+        risk_score: 0,
+        full_name: '',
+        dob: '',
+        nationality: ''
+      },
+      created_at: new Date().toISOString()
     }],
     rules: [{
       id: 'RULE001',
@@ -145,12 +167,13 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="identifiers">Identifiers</TabsTrigger>
                 <TabsTrigger value="metadata">Metadata</TabsTrigger>
                 <TabsTrigger value="parties">Parties</TabsTrigger>
                 <TabsTrigger value="entities">Entities</TabsTrigger>
+                <TabsTrigger value="rules">Rules</TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
@@ -171,6 +194,10 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
 
               <TabsContent value="entities" className="space-y-4">
                 <EntityForm formData={formData} setFormData={handleFormDataUpdate} />
+              </TabsContent>
+
+              <TabsContent value="rules" className="space-y-4">
+                <RulesForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
             </Tabs>
 
