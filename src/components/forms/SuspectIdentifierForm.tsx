@@ -249,7 +249,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                     min="0"
                     max="100"
                     value={identifier.metadata.confidence_score || 0}
-                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.confidence_score', Number(e.target.value))}
+                    onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.confidence_score', Number(e.target.value) || 0)}
                     placeholder="0-100"
                   />
                 </div>
@@ -369,7 +369,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
                             min="0"
                             max="100"
                             value={entity.metadata.risk_score || 0}
-                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.risk_score', Number(e.target.value))}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.risk_score', Number(e.target.value) || 0)}
                           />
                         </div>
                       </div>
