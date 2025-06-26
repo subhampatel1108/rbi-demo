@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText } from 'lucide-react';
@@ -6,6 +5,23 @@ import CreateReportForm from '@/components/CreateReportForm';
 import BulkReportForm from '@/components/BulkReportForm';
 import ReportList from '@/components/ReportList';
 import ReportDetails from '@/components/ReportDetails';
+
+export interface Entity {
+  id: string;
+  entity_type: string;
+  linked_identifiers: string[];
+  parent_entity?: string;
+  metadata: {
+    business_name?: string;
+    registration_number?: string;
+    jurisdiction?: string;
+    risk_score?: number;
+    full_name?: string;
+    dob?: string;
+    nationality?: string;
+  };
+  created_at?: string;
+}
 
 export interface SuspectIdentifier {
   id: string;
@@ -17,6 +33,7 @@ export interface SuspectIdentifier {
   rule_id?: string;
   linked_entity_id: string;
   linked_parties: string[];
+  entities: Entity[];
   metadata: {
     geo_tag?: string;
     device_id?: string;
@@ -56,23 +73,6 @@ export interface PartyRole {
     report_format: string;
     submitted_at: string;
   };
-}
-
-export interface Entity {
-  id: string;
-  entity_type: string;
-  linked_identifiers: string[];
-  parent_entity?: string;
-  metadata: {
-    business_name?: string;
-    registration_number?: string;
-    jurisdiction?: string;
-    risk_score?: number;
-    full_name?: string;
-    dob?: string;
-    nationality?: string;
-  };
-  created_at?: string;
 }
 
 export interface Rule {
@@ -135,7 +135,6 @@ export interface Report {
   reported_at: string;
   created_at: string;
   party_roles: PartyRole[];
-  entities: Entity[];
   rules: Rule[];
 }
 

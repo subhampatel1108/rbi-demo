@@ -264,79 +264,77 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
 
               {/* Right Column */}
               <div className="space-y-6">
-                {/* Suspect Identifiers */}
+                {/* Suspect Identifiers with Entities */}
                 {report.suspect_identifiers && report.suspect_identifiers.length > 0 && (
                   <Card className="border border-gray-200">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <User className="h-5 w-5 text-gray-600" />
-                        Suspect Identifiers
+                        Suspect Identifiers & Entities
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {report.suspect_identifiers.map((identifier, index) => (
                           <div key={index} className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div>
-                                <span className="font-medium text-red-600">Identity:</span>
-                                <p className="text-red-900">{identifier.identity}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-red-600">Type:</span>
-                                <p className="text-red-900">{identifier.identity_type}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-red-600">Status:</span>
-                                <p className="text-red-900">{identifier.status}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-red-600">Fraud Type:</span>
-                                <p className="text-red-900">{identifier.fraud_type}</p>
+                            <div className="mb-3">
+                              <h5 className="font-medium text-red-600 mb-2">Identifier {index + 1}</h5>
+                              <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                                <div>
+                                  <span className="font-medium text-red-600">Identity:</span>
+                                  <p className="text-red-900">{identifier.identity}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-red-600">Type:</span>
+                                  <p className="text-red-900">{identifier.identity_type}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-red-600">Status:</span>
+                                  <p className="text-red-900">{identifier.status}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-red-600">Fraud Type:</span>
+                                  <p className="text-red-900">{identifier.fraud_type}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Entities */}
-                {report.entities && report.entities.length > 0 && (
-                  <Card className="border border-gray-200">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Building className="h-5 w-5 text-gray-600" />
-                        Entities
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {report.entities.map((entity, index) => (
-                          <div key={index} className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div>
-                                <span className="font-medium text-blue-600">Entity ID:</span>
-                                <p className="text-blue-900 font-mono">{entity.id}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-blue-600">Type:</span>
-                                <p className="text-blue-900">{entity.entity_type}</p>
-                              </div>
-                              {entity.metadata.full_name && (
-                                <div className="col-span-2">
-                                  <span className="font-medium text-blue-600">Name:</span>
-                                  <p className="text-blue-900">{entity.metadata.full_name}</p>
+                            
+                            {identifier.entities && identifier.entities.length > 0 && (
+                              <div className="border-t border-red-300 pt-3">
+                                <h6 className="font-medium text-red-600 text-sm mb-2 flex items-center gap-1">
+                                  <Building className="h-3 w-3" />
+                                  Associated Entities ({identifier.entities.length})
+                                </h6>
+                                <div className="space-y-2">
+                                  {identifier.entities.map((entity, entityIndex) => (
+                                    <div key={entityIndex} className="bg-white border border-red-200 p-3 rounded text-xs">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <span className="font-medium text-red-600">Entity ID:</span>
+                                          <p className="text-red-900 font-mono">{entity.id}</p>
+                                        </div>
+                                        <div>
+                                          <span className="font-medium text-red-600">Type:</span>
+                                          <p className="text-red-900">{entity.entity_type}</p>
+                                        </div>
+                                        {entity.metadata.full_name && (
+                                          <div className="col-span-2">
+                                            <span className="font-medium text-red-600">Name:</span>
+                                            <p className="text-red-900">{entity.metadata.full_name}</p>
+                                          </div>
+                                        )}
+                                        {entity.metadata.business_name && (
+                                          <div className="col-span-2">
+                                            <span className="font-medium text-red-600">Business Name:</span>
+                                            <p className="text-red-900">{entity.metadata.business_name}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              )}
-                              {entity.metadata.business_name && (
-                                <div className="col-span-2">
-                                  <span className="font-medium text-blue-600">Business Name:</span>
-                                  <p className="text-blue-900">{entity.metadata.business_name}</p>
-                                </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

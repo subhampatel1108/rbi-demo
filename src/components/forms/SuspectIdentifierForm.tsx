@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
-import { Report, SuspectIdentifier } from '@/components/ReportManagement';
+import { Plus, Trash2, Building, User } from 'lucide-react';
+import { Report, SuspectIdentifier, Entity } from '@/components/ReportManagement';
 
 interface SuspectIdentifierFormProps {
   formData: Omit<Report, 'created_at'>;
@@ -48,6 +48,22 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
           rule_id: '',
           linked_entity_id: '',
           linked_parties: [],
+          entities: [{
+            id: `ENTITY${Date.now()}`,
+            entity_type: 'INDIVIDUAL',
+            linked_identifiers: [],
+            parent_entity: '',
+            metadata: {
+              business_name: '',
+              registration_number: '',
+              jurisdiction: '',
+              risk_score: 0,
+              full_name: '',
+              dob: '',
+              nationality: ''
+            },
+            created_at: new Date().toISOString()
+          }],
           metadata: {
             geo_tag: '',
             device_id: '',
@@ -68,44 +84,95 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
     }
   };
 
+  const addEntityToIdentifier = (identifierIndex: number) => {
+    const newIdentifiers = [...formData.suspect_identifiers];
+    const newEntity: Entity = {
+      id: `ENTITY${Date.now()}`,
+      entity_type: 'INDIVIDUAL',
+      linked_identifiers: [],
+      parent_entity: '',
+      metadata: {
+        business_name: '',
+        registration_number: '',
+        jurisdiction: '',
+        risk_score: 0,
+        full_name: '',
+        dob: '',
+        nationality: ''
+      },
+      created_at: new Date().toISOString()
+    };
+    newIdentifiers[identifierIndex].entities.push(newEntity);
+    setFormData({ ...formData, suspect_identifiers: newIdentifiers });
+  };
+
+  const removeEntityFromIdentifier = (identifierIndex: number, entityIndex: number) => {
+    const newIdentifiers = [...formData.suspect_identifiers];
+    if (newIdentifiers[identifierIndex].entities.length > 1) {
+      newIdentifiers[identifierIndex].entities = newIdentifiers[identifierIndex].entities.filter((_, i) => i !== entityIndex);
+      setFormData({ ...formData, suspect_identifiers: newIdentifiers });
+    }
+  };
+
+  const updateEntity = (identifierIndex: number, entityIndex: number, field: string, value: any) => {
+    const newIdentifiers = [...formData.suspect_identifiers];
+    const entity = newIdentifiers[identifierIndex].entities[entityIndex];
+    
+    if (field.includes('metadata.')) {
+      const metadataField = field.replace('metadata.', '');
+      entity.metadata = {
+        ...entity.metadata,
+        [metadataField]: value
+      };
+    } else {
+      entity[field as keyof Entity] = value;
+    }
+    
+    setFormData({ ...formData, suspect_identifiers: newIdentifiers });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Suspect Identifiers</h3>
+        <h3 className="text-lg font-semibold">Suspect Identifiers & Associated Entities</h3>
         <Button type="button" onClick={addSuspectIdentifier} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Add Identifier
         </Button>
       </div>
 
-      {formData.suspect_identifiers.map((identifier, index) => (
-        <Card key={index}>
+      {formData.suspect_identifiers.map((identifier, identifierIndex) => (
+        <Card key={identifierIndex} className="border-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Identifier {index + 1}</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Identifier {identifierIndex + 1}
+            </CardTitle>
             {formData.suspect_identifiers.length > 1 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => removeSuspectIdentifier(index)}
+                onClick={() => removeSuspectIdentifier(identifierIndex)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Identifier Fields */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Identity</Label>
                 <Input
                   value={identifier.identity}
-                  onChange={(e) => updateSuspectIdentifier(index, 'identity', e.target.value)}
+                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'identity', e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label>Identity Type</Label>
-                <Select value={identifier.identity_type} onValueChange={(value) => updateSuspectIdentifier(index, 'identity_type', value)}>
+                <Select value={identifier.identity_type} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'identity_type', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -119,7 +186,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={identifier.status} onValueChange={(value) => updateSuspectIdentifier(index, 'status', value)}>
+                <Select value={identifier.status} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'status', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -135,7 +202,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Recommended Status</Label>
-                <Select value={identifier.recommended_status} onValueChange={(value) => updateSuspectIdentifier(index, 'recommended_status', value)}>
+                <Select value={identifier.recommended_status} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'recommended_status', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -148,7 +215,7 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
               </div>
               <div className="space-y-2">
                 <Label>Fraud Type</Label>
-                <Select value={identifier.fraud_type} onValueChange={(value) => updateSuspectIdentifier(index, 'fraud_type', value)}>
+                <Select value={identifier.fraud_type} onValueChange={(value) => updateSuspectIdentifier(identifierIndex, 'fraud_type', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -162,47 +229,124 @@ export const SuspectIdentifierForm = ({ formData, setFormData }: SuspectIdentifi
               </div>
             </div>
 
-            <h4 className="text-md font-semibold mt-4">Metadata</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Identifier Metadata */}
+            <h4 className="text-md font-semibold mt-4">Identifier Metadata</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Geo Tag</Label>
                 <Input
                   value={identifier.metadata.geo_tag || ''}
-                  onChange={(e) => updateSuspectIdentifier(index, 'metadata.geo_tag', e.target.value)}
+                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.geo_tag', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Device ID</Label>
                 <Input
                   value={identifier.metadata.device_id || ''}
-                  onChange={(e) => updateSuspectIdentifier(index, 'metadata.device_id', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>IMEI</Label>
-                <Input
-                  value={identifier.metadata.imei || ''}
-                  onChange={(e) => updateSuspectIdentifier(index, 'metadata.imei', e.target.value)}
+                  onChange={(e) => updateSuspectIdentifier(identifierIndex, 'metadata.device_id', e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>IP Address</Label>
-                <Input
-                  value={identifier.metadata.ip_address || ''}
-                  onChange={(e) => updateSuspectIdentifier(index, 'metadata.ip_address', e.target.value)}
-                />
+            {/* Associated Entities */}
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-md font-semibold flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Associated Entities
+                </h4>
+                <Button type="button" onClick={() => addEntityToIdentifier(identifierIndex)} size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Entity
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label>Date of Sending Report</Label>
-                <Input
-                  type="date"
-                  value={identifier.metadata.date_of_sending_report || ''}
-                  onChange={(e) => updateSuspectIdentifier(index, 'metadata.date_of_sending_report', e.target.value)}
-                />
-              </div>
+
+              {identifier.entities.map((entity, entityIndex) => (
+                <Card key={entityIndex} className="mb-4 bg-gray-50 border-gray-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-xs">Entity {entityIndex + 1}</CardTitle>
+                    {identifier.entities.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeEntityFromIdentifier(identifierIndex, entityIndex)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Entity ID</Label>
+                        <Input
+                          size="sm"
+                          value={entity.id}
+                          onChange={(e) => updateEntity(identifierIndex, entityIndex, 'id', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Entity Type</Label>
+                        <Select 
+                          value={entity.entity_type} 
+                          onValueChange={(value) => updateEntity(identifierIndex, entityIndex, 'entity_type', value)}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+                            <SelectItem value="BUSINESS">Business</SelectItem>
+                            <SelectItem value="MERCHANT">Merchant</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {entity.entity_type === 'BUSINESS' || entity.entity_type === 'MERCHANT' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Business Name</Label>
+                          <Input
+                            size="sm"
+                            value={entity.metadata.business_name || ''}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.business_name', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Registration Number</Label>
+                          <Input
+                            size="sm"
+                            value={entity.metadata.registration_number || ''}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.registration_number', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Full Name</Label>
+                          <Input
+                            size="sm"
+                            value={entity.metadata.full_name || ''}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.full_name', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Date of Birth</Label>
+                          <Input
+                            type="date"
+                            size="sm"
+                            value={entity.metadata.dob || ''}
+                            onChange={(e) => updateEntity(identifierIndex, entityIndex, 'metadata.dob', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </CardContent>
         </Card>
