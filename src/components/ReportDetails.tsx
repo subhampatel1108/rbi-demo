@@ -1,10 +1,9 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, FileText, Hash, Tag, User, Building, AlertTriangle, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Hash, Tag, User, Building, AlertTriangle, Clock, Copy, Eye, EyeOff } from 'lucide-react';
 import { Report } from '@/components/ReportManagement';
 
 interface ReportDetailsProps {
@@ -13,6 +12,9 @@ interface ReportDetailsProps {
 }
 
 const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
+  const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
+  const [copiedMetadata, setCopiedMetadata] = useState(false);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE': return 'bg-green-50 text-green-700 border-green-200';
@@ -49,6 +51,94 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
     } catch {
       return 'Unable to display metadata';
     }
+  };
+
+  const copyMetadataToClipboard = () => {
+    const formattedMetadata = formatMetadata(report.metadata);
+    navigator.clipboard.writeText(formattedMetadata);
+    setCopiedMetadata(true);
+    setTimeout(() => setCopiedMetadata(false), 2000);
+  };
+
+  const renderMetadataValue = (key: string, value: any, level: number = 0) => {
+    const indent = level * 20;
+    
+    if (value === null || value === undefined) {
+      return (
+        <div key={key} style={{ marginLeft: indent }} className="flex items-center gap-2 py-1">
+          <span className="font-medium text-gray-600">{key}:</span>
+          <span className="text-gray-400 italic">null</span>
+        </div>
+      );
+    }
+
+    if (typeof value === 'boolean') {
+      return (
+        <div key={key} style={{ marginLeft: indent }} className="flex items-center gap-2 py-1">
+          <span className="font-medium text-gray-600">{key}:</span>
+          <Badge variant={value ? "default" : "secondary"} className="text-xs">
+            {value.toString()}
+          </Badge>
+        </div>
+      );
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+      return (
+        <div key={key} style={{ marginLeft: indent }} className="flex items-center gap-2 py-1">
+          <span className="font-medium text-gray-600">{key}:</span>
+          <span className="text-gray-900 bg-gray-50 px-2 py-1 rounded border text-sm">
+            {value.toString()}
+          </span>
+        </div>
+      );
+    }
+
+    if (Array.isArray(value)) {
+      return (
+        <div key={key} style={{ marginLeft: indent }} className="py-1">
+          <span className="font-medium text-gray-600">{key}:</span>
+          <div className="ml-4 mt-1 space-y-1">
+            {value.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">•</span>
+                {typeof item === 'object' ? (
+                  <div className="bg-blue-50 border border-blue-200 p-2 rounded text-sm">
+                    {Object.entries(item).map(([k, v]) => 
+                      renderMetadataValue(k, v, 0)
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-gray-900 bg-gray-50 px-2 py-1 rounded border text-sm">
+                    {item?.toString()}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (typeof value === 'object') {
+      return (
+        <div key={key} style={{ marginLeft: indent }} className="py-1">
+          <span className="font-medium text-gray-600">{key}:</span>
+          <div className="ml-4 mt-1 bg-gray-50 border border-gray-200 p-3 rounded">
+            {Object.entries(value).map(([k, v]) => 
+              renderMetadataValue(k, v, 0)
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={key} style={{ marginLeft: indent }} className="flex items-center gap-2 py-1">
+        <span className="font-medium text-gray-600">{key}:</span>
+        <span className="text-gray-900">{value?.toString()}</span>
+      </div>
+    );
   };
 
   return (
@@ -262,17 +352,75 @@ const ReportDetails = ({ report, onBack }: ReportDetailsProps) => {
                 <Separator className="my-8" />
                 <Card className="border border-gray-200">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Hash className="h-5 w-5 text-gray-600" />
-                      Additional Metadata
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Hash className="h-5 w-5 text-gray-600" />
+                        Additional Metadata
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsMetadataExpanded(!isMetadataExpanded)}
+                          className="gap-2"
+                        >
+                          {isMetadataExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {isMetadataExpanded ? 'Collapse' : 'Expand'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={copyMetadataToClipboard}
+                          className="gap-2"
+                        >
+                          <Copy className="h-4 w-4" />
+                          {copiedMetadata ? 'Copied!' : 'Copy JSON'}
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <pre className="text-sm text-gray-800 overflow-x-auto whitespace-pre-wrap">
-                        {formatMetadata(report.metadata)}
-                      </pre>
-                    </div>
+                    {isMetadataExpanded ? (
+                      <div className="space-y-3">
+                        {Object.entries(report.metadata).map(([key, value]) => 
+                          renderMetadataValue(key, value)
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Key-Value Summary */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {Object.entries(report.metadata).slice(0, 6).map(([key, value]) => (
+                            <div key={key} className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                              <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">
+                                {key.replace(/_/g, ' ')}
+                              </div>
+                              <div className="text-sm text-blue-900 font-medium">
+                                {typeof value === 'object' ? 
+                                  `${Array.isArray(value) ? value.length + ' items' : Object.keys(value).length + ' fields'}` : 
+                                  value?.toString().slice(0, 50) + (value?.toString().length > 50 ? '...' : '')
+                                }
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {Object.keys(report.metadata).length > 6 && (
+                          <div className="text-center">
+                            <Badge variant="secondary" className="text-xs">
+                              +{Object.keys(report.metadata).length - 6} more fields
+                            </Badge>
+                          </div>
+                        )}
+                        
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <div className="text-xs text-gray-500 mb-2">Raw JSON Preview:</div>
+                          <pre className="text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap max-h-32 overflow-y-auto">
+                            {formatMetadata(report.metadata).slice(0, 200)}...
+                          </pre>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </>
