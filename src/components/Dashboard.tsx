@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Shield, FileText, AlertTriangle, LogOut, User, Upload } from 'lucide-react';
+import { Shield, FileText, AlertTriangle, LogOut, User, BarChart } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sidebar';
 import ReportManagement from '@/components/ReportManagement';
 import DisputeManagement from '@/components/DisputeManagement';
+import BusinessAnalytics from '@/components/BusinessAnalytics';
 
 interface DashboardProps {
   user: { username: string } | null;
@@ -35,6 +36,11 @@ const navigationItems = [
     title: "Disputes",
     icon: AlertTriangle,
     key: "disputes"
+  },
+  {
+    title: "Business & Analytics",
+    icon: BarChart,
+    key: "analytics"
   }
 ];
 
@@ -102,8 +108,23 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         return <ReportManagement />;
       case 'disputes':
         return <DisputeManagement />;
+      case 'analytics':
+        return <BusinessAnalytics />;
       default:
         return <ReportManagement />;
+    }
+  };
+
+  const getModuleDescription = () => {
+    switch (activeModule) {
+      case 'reports':
+        return 'Monitor and manage fraud reports';
+      case 'disputes':
+        return 'Manage and track disputes';
+      case 'analytics':
+        return 'Business insights and fraud analytics';
+      default:
+        return 'Monitor and manage fraud reports';
     }
   };
 
@@ -127,10 +148,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                   {navigationItems.find(item => item.key === activeModule)?.title || 'Dashboard'}
                 </h2>
                 <p className="text-gray-600">
-                  {activeModule === 'reports' 
-                    ? 'Monitor and manage fraud reports' 
-                    : 'Manage and track disputes'
-                  }
+                  {getModuleDescription()}
                 </p>
               </div>
             </div>
