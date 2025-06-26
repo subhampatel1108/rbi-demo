@@ -128,10 +128,11 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
     const newIdentifiers = [...formData.suspect_identifiers];
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
+      const parentObj = newIdentifiers[index][parent as keyof SuspectIdentifier] || {};
       newIdentifiers[index] = {
         ...newIdentifiers[index],
         [parent]: {
-          ...newIdentifiers[index][parent as keyof SuspectIdentifier],
+          ...(typeof parentObj === 'object' && parentObj !== null ? parentObj : {}),
           [child]: value
         }
       };
@@ -147,7 +148,7 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
       suspect_identifiers: [
         ...formData.suspect_identifiers,
         {
-          id: `ID${formData.suspect_identifiers.length + 1}`,
+          id: `ID${String(formData.suspect_identifiers.length + 1).padStart(3, '0')}`,
           identity: '',
           identity_type: 'PAN',
           status: 'ACTIVE',
