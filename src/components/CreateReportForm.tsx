@@ -124,6 +124,10 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
     onSubmit(formData);
   };
 
+  const handleFormDataUpdate = (newData: Omit<Report, 'created_at'>) => {
+    setFormData(newData);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
@@ -150,23 +154,23 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
-                <BasicInfoForm formData={formData} setFormData={setFormData} />
+                <BasicInfoForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
               <TabsContent value="identifiers" className="space-y-4">
-                <SuspectIdentifierForm formData={formData} setFormData={setFormData} />
+                <SuspectIdentifierForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
               <TabsContent value="metadata" className="space-y-4">
-                <MetadataForm formData={formData} setFormData={setFormData} />
+                <MetadataForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
               <TabsContent value="parties" className="space-y-4">
-                <PartyRoleForm formData={formData} setFormData={setFormData} />
+                <PartyRoleForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
 
               <TabsContent value="entities" className="space-y-4">
-                <EntityForm formData={formData} setFormData={setFormData} />
+                <EntityForm formData={formData} setFormData={handleFormDataUpdate} />
               </TabsContent>
             </Tabs>
 
