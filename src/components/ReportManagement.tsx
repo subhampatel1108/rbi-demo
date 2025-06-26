@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Plus, FileText } from 'lucide-react';
 import CreateReportForm from '@/components/CreateReportForm';
+import BulkReportForm from '@/components/BulkReportForm';
 import ReportList from '@/components/ReportList';
 import ReportDetails from '@/components/ReportDetails';
 
@@ -18,7 +18,7 @@ export interface Report {
 }
 
 const ReportManagement = () => {
-  const [view, setView] = useState<'list' | 'create' | 'details'>('list');
+  const [view, setView] = useState<'list' | 'create' | 'bulk' | 'details'>('list');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [reports, setReports] = useState<Report[]>([
     {
@@ -51,6 +51,16 @@ const ReportManagement = () => {
     setView('list');
   };
 
+  const handleBulkCreateReports = (reportsData: Omit<Report, 'id' | 'createdAt'>[]) => {
+    const newReports: Report[] = reportsData.map((reportData, index) => ({
+      ...reportData,
+      id: (Date.now() + index).toString(),
+      createdAt: new Date().toISOString()
+    }));
+    setReports([...newReports, ...reports]);
+    setView('list');
+  };
+
   const handleViewReport = (report: Report) => {
     setSelectedReport(report);
     setView('details');
@@ -65,10 +75,16 @@ const ReportManagement = () => {
               <h3 className="text-lg font-semibold text-gray-900">Fraud Reports</h3>
               <p className="text-gray-600">Manage and track fraud reports</p>
             </div>
-            <Button onClick={() => setView('create')}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button onClick={() => setView('create')}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Report
+              </Button>
+              <Button onClick={() => setView('bulk')} variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Bulk Create
+              </Button>
+            </div>
           </div>
           <ReportList reports={reports} onViewReport={handleViewReport} />
         </>
@@ -77,6 +93,13 @@ const ReportManagement = () => {
       {view === 'create' && (
         <CreateReportForm
           onSubmit={handleCreateReport}
+          onCancel={() => setView('list')}
+        />
+      )}
+
+      {view === 'bulk' && (
+        <BulkReportForm
+          onSubmit={handleBulkCreateReports}
           onCancel={() => setView('list')}
         />
       )}
