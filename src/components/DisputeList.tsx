@@ -112,7 +112,7 @@ const DisputeRow = React.memo(({ dispute, onViewDispute }: DisputeRowProps) => {
 
 DisputeRow.displayName = 'DisputeRow';
 
-const DisputeList = React.memo(({ disputes, onViewDispute }: DisputeListProps) => {
+const DisputeList = ({ disputes, onViewDispute }: DisputeListProps) => {
   return (
     <Card>
       <CardContent className="p-0">
@@ -138,7 +138,7 @@ const DisputeList = React.memo(({ disputes, onViewDispute }: DisputeListProps) =
       </CardContent>
     </Card>
   );
-});
+};
 
 DisputeList.displayName = 'DisputeList';
 

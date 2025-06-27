@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
 
 interface IdentifierObject {
@@ -18,17 +20,28 @@ interface CreateDisputeFormProps {
   isOpen: boolean;
   onSubmit: (dispute: Omit<Dispute, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
+  onSuccess?: () => void;
 }
 
-const CreateDisputeForm = ({ isOpen, onSubmit, onCancel }: CreateDisputeFormProps) => {
+const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisputeFormProps) => {
+  const { email } = useAuth();
+  const { toast } = useToast();
   const [identifiers, setIdentifiers] = useState<IdentifierObject[]>([
     { identifier_id: '', identity_type: '', reason: '' }
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const extractDomain = (email: string) => {
+    if (!email || !email.includes('@')) return '';
+    const fullDomain = email.split('@')[1];
+    return fullDomain.split('.')[0];
+  };
 
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setIdentifiers([{ identifier_id: '', identity_type: '', reason: '' }]);
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -49,26 +62,80 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel }: CreateDisputeFormProp
     setIdentifiers(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Generate random dispute ID and report ID
-    const disputeId = `DSP-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    const reportId = `FRD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
-    // Create dispute object with identifiers array
-    const disputeData = {
-      disputeId,
-      reportId,
-      status: 'Pending' as const,
-      priority: 'Medium' as const,
-      reason: 'Multiple Identifier Issues', // Default reason
-      description: identifiers.map((id, index) => 
-        `${index + 1}. ${id.identity_type}: ${id.identifier_id} - ${id.reason}`
-      ).join('\n'),
-      identifiers: identifiers
-    };
+    const emailDomain = extractDomain(email);
+    if (!emailDomain) {
+      toast({
+        title: "Error",
+        description: "Unable to extract domain from email",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate that all identifiers are filled
+    const isValid = identifiers.every(id => 
+      id.identifier_id.trim() && id.identity_type.trim() && id.reason.trim()
+    );
     
-    onSubmit(disputeData);
+    if (!isValid) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill out all identifier fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const requestBody = {
+        raised_by_party_id: emailDomain,
+        identifier: identifiers
+      };
+
+      const response = await fetch('http://127.0.0.1:8080/dispute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Success",
+          description: "Dispute created successfully",
+          variant: "info"
+        });
+        
+        // Close modal and trigger force update
+        onCancel(); // Close the modal
+        if (onSuccess) {
+          onSuccess(); // Trigger force update of fetchDisputes
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        toast({
+          title: "Error",
+          description: errorData.message || "Failed to create dispute",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error creating dispute:', error);
+      toast({
+        title: "Error",
+        description: "Network error. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -156,8 +223,10 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel }: CreateDisputeFormProp
           </div>
 
           <div className="flex space-x-4 pt-4">
-            <Button type="submit">Create Dispute</Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Dispute'}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Cancel
             </Button>
           </div>
