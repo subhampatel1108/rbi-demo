@@ -152,6 +152,16 @@ const DisputeManagement = () => {
     };
   }, [email, activeTab]);
 
+  // Update selectedDispute when disputes array changes and we have a selected dispute
+  useEffect(() => {
+    if (selectedDispute && disputes.length > 0) {
+      const updatedDispute = disputes.find(d => d.id === selectedDispute.id);
+      if (updatedDispute && JSON.stringify(updatedDispute) !== JSON.stringify(selectedDispute)) {
+        setSelectedDispute(updatedDispute);
+      }
+    }
+  }, [disputes, selectedDispute]);
+
   const handleCreateDispute = (disputeData: Omit<Dispute, 'id' | 'createdAt'>) => {
     const newDispute: Dispute = {
       ...disputeData,
