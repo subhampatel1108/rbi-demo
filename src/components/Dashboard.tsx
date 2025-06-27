@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Shield, FileText, AlertTriangle, LogOut, User, BarChart } from 'lucide-react';
+import { Shield, FileText, AlertTriangle, LogOut, User, BarChart, CreditCard } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ import {
 import ReportManagement from '@/components/ReportManagement';
 import DisputeManagement from '@/components/DisputeManagement';
 import BusinessAnalytics from '@/components/BusinessAnalytics';
+import TransactionManagement from '@/components/TransactionManagement';
 
 interface DashboardProps {
   user: { username: string } | null;
@@ -36,6 +37,11 @@ const navigationItems = [
     title: "Disputes",
     icon: AlertTriangle,
     key: "disputes"
+  },
+  {
+    title: "Transactions",
+    icon: CreditCard,
+    key: "transactions"
   },
   {
     title: "Business & Analytics",
@@ -108,6 +114,8 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         return <ReportManagement />;
       case 'disputes':
         return <DisputeManagement />;
+      case 'transactions':
+        return <TransactionManagement />;
       case 'analytics':
         return <BusinessAnalytics />;
       default:
@@ -121,6 +129,8 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         return 'Monitor and manage fraud reports';
       case 'disputes':
         return 'Manage and track disputes';
+      case 'transactions':
+        return 'Monitor and track all transactions';
       case 'analytics':
         return 'Business insights and fraud analytics';
       default:
