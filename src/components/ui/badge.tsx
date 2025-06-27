@@ -25,11 +25,21 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  noHover?: boolean;
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({ className, variant, noHover, ...props }: BadgeProps) {
+  const baseClasses = badgeVariants({ variant });
+  const finalClasses = noHover 
+    ? baseClasses.replace(/hover:[^\s]+/g, '') 
+    : baseClasses;
+    
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div 
+      className={cn(finalClasses, className)} 
+      {...props} 
+    />
   )
 }
 

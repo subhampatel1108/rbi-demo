@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -18,7 +17,8 @@ export interface Dispute {
 }
 
 const DisputeManagement = () => {
-  const [view, setView] = useState<'list' | 'create' | 'details'>('list');
+  const [view, setView] = useState<'list' | 'details'>('list');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [disputes, setDisputes] = useState<Dispute[]>([
     {
@@ -50,7 +50,7 @@ const DisputeManagement = () => {
       createdAt: new Date().toISOString()
     };
     setDisputes([newDispute, ...disputes]);
-    setView('list');
+    setIsCreateModalOpen(false);
   };
 
   const handleViewDispute = (dispute: Dispute) => {
@@ -67,7 +67,7 @@ const DisputeManagement = () => {
               <h3 className="text-lg font-semibold text-gray-900">Dispute Management</h3>
               <p className="text-gray-600">Raise and track disputes for fraud reports</p>
             </div>
-            <Button onClick={() => setView('create')}>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Raise Dispute
             </Button>
@@ -76,19 +76,18 @@ const DisputeManagement = () => {
         </>
       )}
 
-      {view === 'create' && (
-        <CreateDisputeForm
-          onSubmit={handleCreateDispute}
-          onCancel={() => setView('list')}
-        />
-      )}
-
       {view === 'details' && selectedDispute && (
         <DisputeDetails
           dispute={selectedDispute}
           onBack={() => setView('list')}
         />
       )}
+
+      <CreateDisputeForm
+        isOpen={isCreateModalOpen}
+        onSubmit={handleCreateDispute}
+        onCancel={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 };

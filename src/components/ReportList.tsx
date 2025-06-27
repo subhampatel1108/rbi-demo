@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,7 +45,6 @@ const ReportList = ({ reports, onViewReport }: ReportListProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Report ID</TableHead>
               <TableHead>Report Name</TableHead>
               <TableHead>Fraud Type</TableHead>
               <TableHead>Severity</TableHead>
@@ -58,7 +56,6 @@ const ReportList = ({ reports, onViewReport }: ReportListProps) => {
           <TableBody>
             {reports.map((report) => (
               <TableRow key={report.id}>
-                <TableCell className="font-medium">{report.id}</TableCell>
                 <TableCell>{report.report_name}</TableCell>
                 <TableCell>{report.fraud_type}</TableCell>
                 <TableCell>

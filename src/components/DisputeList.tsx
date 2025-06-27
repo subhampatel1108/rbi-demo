@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye } from 'lucide-react';
+import { Eye, ChevronUp } from 'lucide-react';
 import { Dispute } from '@/components/DisputeManagement';
 
 interface DisputeListProps {
@@ -24,14 +23,35 @@ const DisputeList = ({ disputes, onViewDispute }: DisputeListProps) => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityArrows = (priority: string) => {
+    let count = 1;
+    let color = 'text-yellow-500'; // more vibrant yellow for low
+
     switch (priority) {
-      case 'Critical': return 'bg-red-100 text-red-800';
-      case 'High': return 'bg-orange-100 text-orange-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Low':
+        count = 1;
+        color = 'text-yellow-500';
+        break;
+      case 'Medium':
+        count = 2;
+        color = 'text-orange-600';
+        break;
+      case 'High':
+        count = 3;
+        color = 'text-red-600';
+        break;
+      case 'Critical':
+        count = 3;
+        color = 'text-red-700';
+        break;
+      default:
+        count = 1;
+        color = 'text-yellow-500';
     }
+
+    return Array.from({ length: count }, (_, index) => (
+      <ChevronUp key={index} className={`h-4 w-4 ${color} stroke-[3] -mb-1`} />
+    ));
   };
 
   const formatDate = (dateString: string) => {
@@ -49,41 +69,33 @@ const DisputeList = ({ disputes, onViewDispute }: DisputeListProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>Dispute ID</TableHead>
-              <TableHead>Report ID</TableHead>
               <TableHead>Reason</TableHead>
-              <TableHead>Priority</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {disputes.map((dispute) => (
-              <TableRow key={dispute.id}>
-                <TableCell className="font-medium">{dispute.disputeId}</TableCell>
-                <TableCell>{dispute.reportId}</TableCell>
+              <TableRow 
+                key={dispute.id} 
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => onViewDispute(dispute)}
+              >
+                <TableCell className="font-medium">
+                  <div className="flex items-center space-x-2">
+                    <span>{dispute.disputeId}</span>
+                    <div className="flex flex-col items-center">
+                      {getPriorityArrows(dispute.priority)}
+                    </div>
+                  </div>
+                </TableCell>
                 <TableCell>{dispute.reason}</TableCell>
                 <TableCell>
-                  <Badge className={getPriorityColor(dispute.priority)}>
-                    {dispute.priority}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(dispute.status)}>
+                  <Badge className={getStatusColor(dispute.status)} noHover>
                     {dispute.status}
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(dispute.createdAt)}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onViewDispute(dispute)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
