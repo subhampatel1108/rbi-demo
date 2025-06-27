@@ -148,6 +148,13 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
     setFormData(newData);
   };
 
+  const handleSuspectIdentifiersChange = (identifiers: any[]) => {
+    setFormData({
+      ...formData,
+      suspect_identifiers: identifiers
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
@@ -177,7 +184,10 @@ const CreateReportForm = ({ onSubmit, onCancel }: CreateReportFormProps) => {
               </TabsContent>
 
               <TabsContent value="identifiers" className="space-y-4">
-                <SuspectIdentifierForm formData={formData} setFormData={handleFormDataUpdate} />
+                <SuspectIdentifierForm 
+                  suspectIdentifiers={formData.suspect_identifiers} 
+                  onChange={handleSuspectIdentifiersChange} 
+                />
               </TabsContent>
 
               <TabsContent value="sources" className="space-y-4">
