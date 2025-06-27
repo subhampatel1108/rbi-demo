@@ -9,11 +9,13 @@ import { Dispute } from '@/components/DisputeManagement';
 interface DisputeListProps {
   disputes: Dispute[];
   onViewDispute: (dispute: Dispute) => void;
+  newlyCreatedDisputes: Set<string>;
 }
 
 interface DisputeRowProps {
   dispute: Dispute;
   onViewDispute: (dispute: Dispute) => void;
+  isNewlyCreated: boolean;
 }
 
 const getStatusColor = (status: string) => {
@@ -82,16 +84,21 @@ const disputeEqual = (prevProps: DisputeRowProps, nextProps: DisputeRowProps) =>
     prev.status === next.status &&
     prev.priority === next.priority &&
     prev.createdAt === next.createdAt &&
-    prevProps.onViewDispute === nextProps.onViewDispute
+    prevProps.onViewDispute === nextProps.onViewDispute &&
+    prevProps.isNewlyCreated === nextProps.isNewlyCreated
   );
 };
 
 // Memoized row component with custom comparison
-const DisputeRow = React.memo(({ dispute, onViewDispute }: DisputeRowProps) => {
-  // Use the actual priority from the dispute object
+const DisputeRow = React.memo(({ dispute, onViewDispute, isNewlyCreated }: DisputeRowProps) => {
+  
   return (
     <TableRow 
-      className="cursor-pointer hover:bg-gray-50 transition-colors"
+      className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+        isNewlyCreated 
+          ? 'fade-from-yellow bg-yellow-200' 
+          : ''
+      }`}
       onClick={() => onViewDispute(dispute)}
     >
       <TableCell className="font-medium">
@@ -118,10 +125,25 @@ const DisputeRow = React.memo(({ dispute, onViewDispute }: DisputeRowProps) => {
 
 DisputeRow.displayName = 'DisputeRow';
 
-const DisputeList = ({ disputes, onViewDispute }: DisputeListProps) => {
+const DisputeList = ({ disputes, onViewDispute, newlyCreatedDisputes }: DisputeListProps) => {
   return (
     <Card className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <CardContent className="p-0">
+        <style>
+          {`
+            @keyframes fadeFromYellow {
+              0% {
+                background-color: rgb(254 240 138);
+              }
+              100% {
+                background-color: transparent;
+              }
+            }
+            .fade-from-yellow {
+              animation: fadeFromYellow 3s ease-out forwards;
+            }
+          `}
+        </style>
         <Table>
           <TableHeader>
             <TableRow>
@@ -137,6 +159,7 @@ const DisputeList = ({ disputes, onViewDispute }: DisputeListProps) => {
                 key={dispute.id}
                 dispute={dispute}
                 onViewDispute={onViewDispute}
+                isNewlyCreated={newlyCreatedDisputes.has(dispute.id)}
               />
             ))}
           </TableBody>

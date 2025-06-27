@@ -28,6 +28,7 @@ const DisputeManagement = () => {
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(false);
+  const [newlyCreatedDisputes, setNewlyCreatedDisputes] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const extractDomain = (email: string) => {
@@ -168,7 +169,22 @@ const DisputeManagement = () => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString()
     };
+    
+    // Add to disputes list
     setDisputes([newDispute, ...disputes]);
+    
+    // Mark as newly created for highlighting
+    setNewlyCreatedDisputes(prev => new Set([...prev, newDispute.id]));
+    
+    // Remove from newly created after 3 seconds
+    setTimeout(() => {
+      setNewlyCreatedDisputes(prev => {
+        const updated = new Set(prev);
+        updated.delete(newDispute.id);
+        return updated;
+      });
+    }, 3000);
+    
     setIsCreateModalOpen(false);
   };
 
@@ -216,7 +232,7 @@ const DisputeManagement = () => {
               <div className="text-gray-500">Loading disputes...</div>
             </div>
           ) : (
-            <DisputeList disputes={disputes} onViewDispute={handleViewDispute} />
+            <DisputeList disputes={disputes} onViewDispute={handleViewDispute} newlyCreatedDisputes={newlyCreatedDisputes} />
           )}
         </>
       )}
@@ -234,7 +250,7 @@ const DisputeManagement = () => {
         isOpen={isCreateModalOpen}
         onSubmit={handleCreateDispute}
         onCancel={() => setIsCreateModalOpen(false)}
-        onSuccess={() => fetchDisputes(true)}
+        onSuccess={() => {fetchDisputes(true) ; setIsCreateModalOpen(false)}}
       />
     </div>
   );
