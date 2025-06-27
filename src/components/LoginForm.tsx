@@ -1,17 +1,14 @@
-
 import React, { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, AlertCircle } from 'lucide-react';
 
-interface LoginFormProps {
-  onLogin: (username: string, password: string) => boolean;
-}
-
-const LoginForm = ({ onLogin }: LoginFormProps) => {
-  const [username, setUsername] = useState('');
+const LoginForm = () => {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,14 +18,16 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     setError('');
     setLoading(true);
 
-    if (!username || !password) {
-      setError('Please enter both username and password');
+    if (!email || !password) {
+      setError('Please enter both email and password');
       setLoading(false);
       return;
     }
 
-    const success = onLogin(username, password);
-    if (!success) {
+    // Simple validation - accept any non-empty values
+    if (email && password) {
+      login(email);
+    } else {
       setError('Invalid credentials. Please try again.');
     }
     setLoading(false);
@@ -47,13 +46,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 required
               />
             </div>
