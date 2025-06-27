@@ -94,10 +94,10 @@ const DisputeRow = React.memo(({ dispute, onViewDispute, isNewlyCreated }: Dispu
   
   return (
     <TableRow 
-      className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+      className={`cursor-pointer transition-colors ${
         isNewlyCreated 
-          ? 'fade-from-yellow bg-yellow-200' 
-          : ''
+          ? 'newly-created-row' 
+          : 'hover:bg-gray-50'
       }`}
       onClick={() => onViewDispute(dispute)}
     >
@@ -133,14 +133,27 @@ const DisputeList = ({ disputes, onViewDispute, newlyCreatedDisputes }: DisputeL
           {`
             @keyframes fadeFromYellow {
               0% {
-                background-color: rgb(254 240 138);
+                background-color: #fef08a !important;
+                opacity: 1;
+              }
+              50% {
+                background-color: #fef08a !important;
+                opacity: 0.8;
               }
               100% {
-                background-color: transparent;
+                background-color: transparent !important;
+                opacity: 1;
               }
             }
-            .fade-from-yellow {
-              animation: fadeFromYellow 3s ease-out forwards;
+            
+            .newly-created-row {
+              background-color: #fef08a !important;
+              animation: fadeFromYellow 3s ease-out forwards !important;
+            }
+            
+            .newly-created-row:hover {
+              background-color: #fde047 !important;
+              animation-play-state: paused;
             }
           `}
         </style>
@@ -172,3 +185,4 @@ const DisputeList = ({ disputes, onViewDispute, newlyCreatedDisputes }: DisputeL
 DisputeList.displayName = 'DisputeList';
 
 export default DisputeList;
+

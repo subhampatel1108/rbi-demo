@@ -187,6 +187,9 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
         <DialogHeader>
           <DialogTitle>Raise New Dispute</DialogTitle>
           <DialogDescription>Create a dispute for a fraud report</DialogDescription>
+          <p className="text-sm text-gray-500 mt-2">
+            <strong>Note:</strong> Dispute ID will be auto-generated on submit
+          </p>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -310,10 +313,6 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
               Cancel
             </Button>
           </div>
-          
-          <p className="text-sm text-gray-500 mt-4">
-            <strong>Note:</strong> Dispute ID will be auto-generated on submit
-          </p>
         </form>
       </DialogContent>
     </Dialog>
