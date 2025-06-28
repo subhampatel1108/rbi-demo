@@ -402,7 +402,12 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           <div className="lg:col-span-1">
             <div className="relative">
               {/* Base vertical line */}
-              <div className="absolute left-[6px] top-[6px] bottom-0 w-px bg-blue-200"></div>
+              <div 
+                className="absolute left-[6px] top-[6px] w-px bg-blue-200"
+                style={{
+                  height: `${(timelineEvents.length - 1) * 99 + 6}px` // Stops at last timeline dot
+                }}
+              ></div>
               
               {/* Progress line - shows actual completion */}
               <div 
@@ -411,9 +416,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   height: dispute.status === 'PENDING' 
                     ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
                     : dispute.status === 'RESOLVED'
-                    ? '100%' // Covers all steps for resolved
+                    ? `${(timelineEvents.length - 1) * 99 + 6}px` // Covers all steps for resolved
                     : dispute.status === 'REJECTED'
-                    ? 'calc(100% - 80px)' // Stops before the final step for rejected
+                    ? `${(timelineEvents.length - 2) * 99 + 6}px` // Stops before the final step for rejected
                     : '70px' // Default for other statuses
                 }}
               ></div>
@@ -423,8 +428,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div 
                   className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
                   style={{
-                    top: 'calc(100% - 80px)', // Starts where blue line ends
-                    height: '120px' // Covers the final step and extends beyond
+                    top: `${(timelineEvents.length - 2) * 99 + 12}px`, // Starts where blue line ends
+                    height: '93px' // Covers the final step
                   }}
                 ></div>
               )}
@@ -618,7 +623,12 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         <div className="lg:col-span-1">
           <div className="relative">
             {/* Base vertical line */}
-            <div className="absolute left-[6px] top-[6px] bottom-0 w-px bg-blue-200"></div>
+            <div 
+              className="absolute left-[6px] top-[6px] w-px bg-blue-200"
+              style={{
+                height: `${(timelineEvents.length - 1) * 99 + 6}px` // Stops at last timeline dot
+              }}
+            ></div>
             
             {/* Progress line - shows actual completion */}
             <div 
@@ -627,9 +637,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 height: dispute.status === 'PENDING' 
                   ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
                   : dispute.status === 'RESOLVED'
-                  ? '100%' // Covers all steps for resolved
+                  ? `${(timelineEvents.length - 1) * 99 + 6}px` // Covers all steps for resolved
                   : dispute.status === 'REJECTED'
-                  ? 'calc(100% - 80px)' // Stops before the final step for rejected
+                  ? `${(timelineEvents.length - 2) * 99 + 6}px` // Stops before the final step for rejected
                   : '70px' // Default for other statuses
               }}
             ></div>
@@ -639,8 +649,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               <div 
                 className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
                 style={{
-                  top: 'calc(100% - 80px)', // Starts where blue line ends
-                  height: '120px' // Covers the final step and extends beyond
+                  top: `${(timelineEvents.length - 2) * 99 + 12}px`, // Starts where blue line ends
+                  height: '93px' // Covers the final step
                 }}
               ></div>
             )}
