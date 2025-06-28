@@ -40,7 +40,7 @@ const ReportList = ({ reports, onViewReport }: ReportListProps) => {
   };
 
   return (
-    <Card>
+    <Card className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <CardContent className="p-0">
         <Table>
           <TableHeader>

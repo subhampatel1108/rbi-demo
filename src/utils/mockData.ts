@@ -22,7 +22,7 @@ export const getMockResponse = (tab: string): ApiResponse => {
     return {
       "disputes": [
         {
-          "dispute_id": "rep_001",
+          "dispute_id": "3252357872",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "icici",
           "reason": "Mismatch in KYC details",
@@ -31,7 +31,7 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "priority": "High"
         },
         {
-          "dispute_id": "rep_001",
+          "dispute_id": "7836451209",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "axis",
           "reason": "Mismatch in KYC details",
@@ -40,25 +40,25 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "priority": "Medium"
         },
         {
-          "dispute_id": "rep_001",
+          "dispute_id": "9087123456",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "sbi",
           "reason": "Mismatch in KYC details",
-          "status": "RESOLVED",
+          "status": "REJECTED",
           "raised_at": "2025-06-26 12:29:55.706957",
           "priority": "Low"
         },
         {
-          "dispute_id": "rep_001",
+          "dispute_id": "5647382910",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "kotak",
           "reason": "Mismatch in KYC details",
-          "status": "PENDING",
+          "status": "INFO_REQUESTED",
           "raised_at": "2025-06-26 12:29:55.706957",
           "priority": "High"
         },
         {
-          "dispute_id": "rep_002",
+          "dispute_id": "2198765432",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "icici",
           "reason": "Multiple linked accounts detected",
@@ -67,7 +67,7 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "priority": "Medium"
         },
         {
-          "dispute_id": "rep_002",
+          "dispute_id": "6543217890",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "axis",
           "reason": "Multiple linked accounts detected",
@@ -76,20 +76,20 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "priority": "Low"
         },
         {
-          "dispute_id": "rep_002",
+          "dispute_id": "8901234567",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "sbi",
           "reason": "Multiple linked accounts detected",
-          "status": "RESOLVED",
+          "status": "INFO_REQUESTED",
           "raised_at": "2025-06-26 12:29:55.706957",
           "priority": "Medium"
         },
         {
-          "dispute_id": "rep_002",
+          "dispute_id": "4567890123",
           "raised_by_party_id": "hdfc",
           "raised_against_party_id": "kotak",
           "reason": "Multiple linked accounts detected",
-          "status": "PENDING",
+          "status": "REJECTED",
           "raised_at": "2025-06-26 12:29:55.706957",
           "priority": "High"
         }
@@ -100,7 +100,7 @@ export const getMockResponse = (tab: string): ApiResponse => {
     return {
       "disputes": [
         {
-          "dispute_id": "report_001",
+          "dispute_id": "1234567890",
           "raised_by_party_id": "party_001",
           "raised_against_party_id": "merchant_123",
           "reason": "Suspicious transaction pattern",
@@ -109,11 +109,11 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "priority": "High"
         },
         {
-          "dispute_id": "report_002",
+          "dispute_id": "9876543210",
           "raised_by_party_id": "party_002",
           "raised_against_party_id": "merchant_123",
           "reason": "Failed to deliver goods",
-          "status": "PENDING",
+          "status": "INFO_REQUESTED",
           "raised_at": "2025-06-26 10:03:43.127213",
           "priority": "Medium"
         }

@@ -14,7 +14,7 @@ export interface Dispute {
   reportId: string;
   reason: string;
   description: string;
-  status: 'Pending' | 'Under Review' | 'Approved' | 'Rejected' | 'Closed';
+  status: 'PENDING' | 'RESOLVED' | 'REJECTED' | 'INFO_REQUESTED';
   createdAt: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
 }
@@ -43,8 +43,7 @@ const DisputeManagement = () => {
       reportId: apiDispute.dispute_id,
       reason: apiDispute.reason,
       description: apiDispute.reason,
-      status: apiDispute.status === 'PENDING' ? 'Pending' : 
-              apiDispute.status === 'RESOLVED' ? 'Closed' : 'Under Review',
+      status: apiDispute.status as any,
       createdAt: apiDispute.raised_at,
       priority: apiDispute.priority || 'Medium'
     };

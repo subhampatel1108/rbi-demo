@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,7 @@ const TransactionList = ({ transactions, onViewTransaction }: TransactionListPro
   };
 
   return (
-    <Card>
+    <Card className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <CardContent className="p-0">
         <Table>
           <TableHeader>

@@ -93,11 +93,10 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'Under Review': return 'bg-blue-100 text-blue-800';
-      case 'Approved': return 'bg-green-100 text-green-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      case 'Closed': return 'bg-gray-100 text-gray-800';
+      case 'PENDING': return 'bg-yellow-200 text-yellow-900';
+      case 'RESOLVED': return 'bg-green-100 text-green-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'INFO_REQUESTED': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -221,9 +220,14 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
           <div className="flex items-center space-x-4">
             <h2 className="text-2xl font-bold text-gray-900">{dispute.disputeId}</h2>
-            <Badge className={getStatusColor(dispute.status)} noHover>
-              {dispute.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge 
+                className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                noHover
+              >
+                {dispute.status}
+              </Badge>
+            </div>
           </div>
         </div>
 
@@ -387,12 +391,16 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* Header with back button and menu - full width */}
-      <div className="flex items-center justify-between mb-8">
-        <Button variant="ghost" size="sm" onClick={onBack} className="p-2">
-          <ArrowLeft className="h-5 w-5" />
+      <div className="flex items-center justify-between mb-6">
+        <Button 
+          variant="ghost" 
+          onClick={onBack} 
+          className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200"
+        >
+          <ArrowLeft className="h-6 w-6" /> Back
         </Button>
-        <Button variant="ghost" size="sm" className="p-2">
-          <Menu className="h-5 w-5" />
+        <Button variant="ghost" size="icon">
+          <Menu className="h-6 w-6" />
         </Button>
       </div>
 
@@ -401,9 +409,14 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
         <div className="flex items-center space-x-4">
           <h2 className="text-2xl font-bold text-gray-900">{dispute.disputeId}</h2>
-          <Badge className={getStatusColor(dispute.status)} noHover>
-            {dispute.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge 
+              className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+              noHover
+            >
+              {dispute.status}
+            </Badge>
+          </div>
         </div>
       </div>
 
