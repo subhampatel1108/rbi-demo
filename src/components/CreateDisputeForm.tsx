@@ -115,15 +115,9 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
     setIsSubmitting(true);
 
     try {
-      // Generate a random 10-digit dispute ID
-      const generateDisputeId = () => {
-        return Math.floor(1000000000 + Math.random() * 9000000000).toString();
-      };
-
       const requestBody = {
         raised_by_party_id: emailDomain,
         identifier: identifiers,
-        dispute_id: generateDisputeId() // Add generated dispute ID
       };
 
       const response = await fetch(`${API_CONFIG.HOSTNAME}${API_ENDPOINTS.CREATE_DISPUTE}`, {
@@ -211,7 +205,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="PAN">PAN</SelectItem>
-                        <SelectItem value="UPI ID">UPI ID</SelectItem>
+                        <SelectItem value="UPI_ID">UPI ID</SelectItem>
                         <SelectItem value="MOBILE">MOBILE</SelectItem>
                         <SelectItem value="ACCOUNT_NUMBER">ACCOUNT NUMBER</SelectItem>
                       </SelectContent>

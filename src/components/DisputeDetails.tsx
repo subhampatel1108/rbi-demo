@@ -105,11 +105,12 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
     try {
       const requestBody = {
-        decision: selectedAction,
-        feedback: feedback.trim()
+        party_id: emailDomain,
+        status: selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED',
+        resolution_comments: feedback.trim()
       };
 
-      const response = await fetch(`${API_CONFIG.HOSTNAME}${API_ENDPOINTS.UPDATE_DISPUTE}`, {
+      const response = await fetch(`${API_CONFIG.HOSTNAME}/disputes/${dispute.disputeId}/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,44 +227,51 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
     {
       title: "Dispute Raised",
       time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 09:30 AM",
-      description: "Dispute submitted by customer\nInitial dispute documentation received",
+      description: "Dispute Submitted by bank\nInitial dispute details received",
       status: "completed",
       color: "bg-blue-500"
     },
     {
-      title: "Internal Review Initiated",
+      title: "RBI Receives & Forwards Dispute",
       time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 10:45 AM",
-      description: "Internal team assigned for review\nPreliminary assessment started",
+      description: "RBI received dispute & raised it to source bank",
       status: "completed",
       color: "bg-blue-500"
     },
     {
-      title: "Fraud Committee Decision Issued",
+      title: "Source Bank Investigation",
       time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 02:15 PM",
-      description: "Committee reviewed all evidence\nDecision reached based on findings",
+      description: "Source bank kept the dispute under investigation",
       status: "completed",
       color: "bg-blue-500"
     },
     {
-      title: "Registry Update Requested",
+      title: "Source Bank Decision",
       time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 03:30 PM",
-      description: "Update request sent to central registry\nStatus change initiated in system",
+      description: dispute.status === 'RESOLVED' 
+        ? "Source bank accepted dispute"
+        : dispute.status === 'REJECTED'
+        ? "Source bank rejected dispute"
+        : "Source bank reviewing dispute",
       status: "completed",
       color: "bg-blue-500"
     },
     {
-      title: "Customer Notified",
-      time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 04:45 PM",
-      description: "Notification sent to customer via email\nDecision communicated with detailed reasoning",
-      status: "completed",
+      title: dispute.status === 'RESOLVED' 
+        ? "Dispute Resolved" 
+        : dispute.status === 'REJECTED'
+        ? "Dispute Rejected"
+        : "Dispute Resolution Pending",
+      time: dispute.status === 'RESOLVED' || dispute.status === 'REJECTED' 
+        ? new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 04:45 PM"
+        : "",
+      description: dispute.status === 'RESOLVED' 
+        ? "Decision communicated to bank\nDispute successfully resolved"
+        : dispute.status === 'REJECTED'
+        ? "Decision communicated to bank\nDispute rejected by source bank"
+        : "",
+      status: dispute.status === 'RESOLVED' || dispute.status === 'REJECTED' ? "completed" : "pending",
       color: "bg-blue-500"
-    },
-    {
-      title: "Dispute Resolved",
-      time: "",
-      description: "",
-      status: "pending",
-      color: "bg-gray-300"
     }
   ];
 
@@ -402,15 +410,46 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           {/* Right Column - Timeline */}
           <div className="lg:col-span-1">
             <div className="relative">
-              {/* Continuous vertical line */}
+              {/* Base vertical line */}
               <div className="absolute left-[6px] top-[6px] bottom-0 w-0.5 bg-blue-200"></div>
+              
+              {/* Progress line - shows actual completion */}
+              <div 
+                className="absolute left-[5px] top-[6px] w-1 bg-blue-500 transition-all duration-500"
+                style={{
+                  height: dispute.status === 'PENDING' 
+                    ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
+                    : dispute.status === 'RESOLVED'
+                    ? '100%' // Covers all steps for resolved
+                    : dispute.status === 'REJECTED'
+                    ? 'calc(100% - 80px)' // Stops before the final step for rejected
+                    : '70px' // Default for other statuses
+                }}
+              ></div>
+
+              {/* Red line segment for rejected disputes */}
+              {dispute.status === 'REJECTED' && (
+                <div 
+                  className="absolute left-[5px] w-1 bg-red-500 transition-all duration-500"
+                  style={{
+                    top: 'calc(100% - 80px)', // Starts where blue line ends
+                    height: '120px' // Covers the final step and extends beyond
+                  }}
+                ></div>
+              )}
               
               <div className="space-y-6">
                 {timelineEvents.map((event, index) => (
                   <div key={index} className="flex space-x-4 relative">
                     {/* Timeline dot */}
                     <div className="flex flex-col items-center relative z-10">
-                      <div className={`w-3 h-3 rounded-full ${event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0 border-2 border-white`}></div>
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
+                        event.status === 'pending' 
+                          ? 'bg-gray-300' 
+                          : (index === timelineEvents.length - 1 && dispute.status === 'REJECTED')
+                          ? 'bg-red-500'
+                          : 'bg-blue-500'
+                      }`}></div>
                     </div>
                     
                     {/* Timeline content */}
@@ -596,15 +635,46 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         {/* Right Column - Timeline */}
         <div className="lg:col-span-1">
           <div className="relative">
-            {/* Continuous vertical line */}
+            {/* Base vertical line */}
             <div className="absolute left-[6px] top-[6px] bottom-0 w-0.5 bg-blue-200"></div>
+            
+            {/* Progress line - shows actual completion */}
+            <div 
+              className="absolute left-[5px] top-[6px] w-1 bg-blue-500 transition-all duration-500"
+              style={{
+                height: dispute.status === 'PENDING' 
+                  ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
+                  : dispute.status === 'RESOLVED'
+                  ? '100%' // Covers all steps for resolved
+                  : dispute.status === 'REJECTED'
+                  ? 'calc(100% - 120px)' // Stops before the final step for rejected
+                  : '70px' // Default for other statuses
+              }}
+            ></div>
+
+            {/* Red line segment for rejected disputes */}
+            {dispute.status === 'REJECTED' && (
+              <div 
+                className="absolute left-[5px] w-1 bg-red-500 transition-all duration-500"
+                style={{
+                  top: 'calc(100% - 80px)', // Starts where blue line ends
+                  height: '120px' // Covers the final step and extends beyond
+                }}
+              ></div>
+            )}
             
             <div className="space-y-6">
               {timelineEvents.map((event, index) => (
                 <div key={index} className="flex space-x-4 relative">
                   {/* Timeline dot */}
                   <div className="flex flex-col items-center relative z-10">
-                    <div className={`w-3 h-3 rounded-full ${event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0 border-2 border-white`}></div>
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
+                      event.status === 'pending' 
+                        ? 'bg-gray-300' 
+                        : (index === timelineEvents.length - 1 && dispute.status === 'REJECTED')
+                        ? 'bg-red-500'
+                        : 'bg-blue-500'
+                    }`}></div>
                   </div>
                   
                   {/* Timeline content */}
