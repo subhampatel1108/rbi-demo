@@ -324,19 +324,6 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-[80px]">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Description Section - First */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">Description</h3>
-              <p className="text-gray-900 leading-relaxed">
-                On 12 May 2025, at 12:30, Rajesh S Kumar approached the bank with a pressing 
-                concern. He firmly believes that he has been mistakenly added to a block list, which 
-                has severely impacted his ability to access essential banking services. Rajesh 
-                insists that he has maintained a good standing with the bank and has not engaged 
-                in any activities that would warrant such a restriction. He is seeking immediate 
-                clarification and removal from the block list to restore his banking privileges.
-              </p>
-            </div>
-
             {/* Dispute Details Section */}
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900">Dispute Details</h3>
@@ -352,14 +339,6 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Criticality</span>
                   {getPriorityIcon(dispute.priority)}
-                </div>
-
-                {/* Reason */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Reason</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-900 font-medium">{dispute.reason}</span>
-                  </div>
                 </div>
 
                 {/* Attachments */}
@@ -384,25 +363,37 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               <h3 className="text-xl font-semibold text-gray-900">Identity Details</h3>
               
               <div className="space-y-6">
-                {/* Pan Number */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Pan Number</span>
-                  <span className="text-gray-900 font-medium font-mono">BFYXXX78R</span>
-                </div>
+                {dispute.identities && dispute.identities.length > 0 ? (
+                  dispute.identities.map((identifier, index) => (
+                    <div key={index} className="space-y-4">
+                      {/* Identity Type and ID */}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">
+                          {identifier.identity_type === 'PAN' ? 'Pan Number' : 
+                           identifier.identity_type === 'MOBILE' ? 'Phone number' :
+                           identifier.identity_type === 'EMAIL' ? 'Email address' :
+                           identifier.identity_type}
+                        </span>
+                        <span className="text-gray-900 font-medium font-mono">{identifier.identifier_id}</span>
+                      </div>
 
-                {/* Phone number */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Phone number</span>
-                  <span className="text-gray-900 font-medium font-mono">98546549135</span>
-                </div>
+                      {/* Reason */}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Reason</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-900 font-medium">{identifier.reason}</span>
+                        </div>
+                      </div>
 
-                {/* Reason */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Reason</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-900 font-medium">False Positive</span>
-                  </div>
-                </div>
+                      {/* Add separator between identifiers except for the last one */}
+                      {index < dispute.identities.length - 1 && (
+                        <hr className="border-gray-200" />
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-gray-500 text-sm">No identity details available</div>
+                )}
               </div>
             </div>
           </div>
@@ -566,14 +557,6 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 {getPriorityIcon(dispute.priority)}
               </div>
 
-              {/* Reason */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Reason</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-gray-900 font-medium">{dispute.reason}</span>
-                </div>
-              </div>
-
               {/* Attachments */}
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Attachments</span>
@@ -588,19 +571,6 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   </Button>
                 </div>
               </div>
-
-              {/* Description */}
-              <div className="space-y-4">
-                <h4 className="text-gray-500">Description</h4>
-                <p className="text-gray-900 leading-relaxed">
-                  On 12 May 2025, at 12:30, Rajesh S Kumar approached the bank with a pressing 
-                  concern. He firmly believes that he has been mistakenly added to a block list, which 
-                  has severely impacted his ability to access essential banking services. Rajesh 
-                  insists that he has maintained a good standing with the bank and has not engaged 
-                  in any activities that would warrant such a restriction. He is seeking immediate 
-                  clarification and removal from the block list to restore his banking privileges.
-                </p>
-              </div>
             </div>
           </div>
 
@@ -609,25 +579,37 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
             <h3 className="text-xl font-semibold text-gray-900">Identity Details</h3>
             
             <div className="space-y-6">
-              {/* Pan Number */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Pan Number</span>
-                <span className="text-gray-900 font-medium font-mono">BFYXXX78R</span>
-              </div>
+              {dispute.identities && dispute.identities.length > 0 ? (
+                dispute.identities.map((identifier, index) => (
+                  <div key={index} className="space-y-4">
+                    {/* Identity Type and ID */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">
+                        {identifier.identity_type === 'PAN' ? 'Pan Number' : 
+                         identifier.identity_type === 'MOBILE' ? 'Phone number' :
+                         identifier.identity_type === 'EMAIL' ? 'Email address' :
+                         identifier.identity_type}
+                      </span>
+                      <span className="text-gray-900 font-medium font-mono">{identifier.identifier_id}</span>
+                    </div>
 
-              {/* Phone number */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Phone number</span>
-                <span className="text-gray-900 font-medium font-mono">98546549135</span>
-              </div>
+                    {/* Reason */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Reason</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-gray-900 font-medium">{identifier.reason}</span>
+                      </div>
+                    </div>
 
-              {/* Reason */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Reason</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-gray-900 font-medium">False Positive</span>
-                </div>
-              </div>
+                    {/* Add separator between identifiers except for the last one */}
+                    {index < dispute.identities.length - 1 && (
+                      <hr className="border-gray-200" />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-sm">No identity details available</div>
+              )}
             </div>
           </div>
         </div>

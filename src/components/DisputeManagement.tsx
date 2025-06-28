@@ -7,8 +7,14 @@ import CreateDisputeForm from '@/components/CreateDisputeForm';
 import DisputeList from '@/components/DisputeList';
 import DisputeDetails from '@/components/DisputeDetails';
 import TableSkeleton from '@/components/ui/TableSkeleton';
-import { MOCK_MODE, getMockResponse, ApiDispute, ApiResponse } from '@/utils/mockData';
+import { MOCK_MODE, getMockResponse, ApiDispute, ApiResponse, ApiIdentifier } from '@/utils/mockData';
 import { API_CONFIG, API_ENDPOINTS } from '@/constants';
+
+export interface Identifier {
+  identifier_id: string;
+  identity_type: string;
+  reason: string;
+}
 
 export interface Dispute {
   id: string;
@@ -19,6 +25,7 @@ export interface Dispute {
   status: 'PENDING' | 'RESOLVED' | 'REJECTED' | 'INFO_REQUESTED';
   createdAt: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  identities: Identifier[];
 }
 
 const DisputeManagement = () => {
@@ -32,6 +39,7 @@ const DisputeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [newlyCreatedDisputes, setNewlyCreatedDisputes] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [showUpdateIndicator, setShowUpdateIndicator] = useState(false);
 
   // Subtle update indicator component
@@ -79,35 +87,67 @@ const DisputeManagement = () => {
       description: apiDispute.reason,
       status: apiDispute.status as any,
       createdAt: apiDispute.raised_at,
-      priority: apiDispute.priority || 'Medium'
+      priority: apiDispute.priority || 'Medium',
+      identities: apiDispute.identities || []
     };
   };
 
   const fetchDisputes = async (forceUpdate = false) => {
     const emailDomain = extractDomain(email);
     if (!emailDomain) return;
+    
+    // Cancel any previous pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
     if(forceUpdate) {
       setLoading(true);
     }
+    
     try {
       let data: ApiResponse;
       
       if (MOCK_MODE) {
         // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(resolve, 300);
+          abortController.signal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+            reject(new DOMException('Request aborted', 'AbortError'));
+          });
+        });
+        
+        // Check if request was aborted before proceeding
+        if (abortController.signal.aborted) {
+          throw new DOMException('Request aborted', 'AbortError');
+        }
+        
         data = getMockResponse(activeTab);
       } else {
         const baseUrl = activeTab === 'raised-against-us' 
           ? `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_ASSIGNED_DISPUTES}?party_id=${emailDomain}`
           : `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_DISPUTES}?party_id=${emailDomain}`;
         
-        const response = await fetch(baseUrl);
+        const response = await fetch(baseUrl, {
+          signal: abortController.signal
+        });
+        
         if (response.ok) {
           data = await response.json();
         } else {
           console.error('Failed to fetch disputes:', response.statusText);
           return;
         }
+      }
+
+      // Check if this request is still the current one (not aborted by a newer request)
+      if (abortController.signal.aborted || abortControllerRef.current !== abortController) {
+        return; // Ignore this response as it's outdated
       }
 
       const convertedDisputes = data.disputes.map(convertApiDisputeToDispute);
@@ -138,9 +178,17 @@ const DisputeManagement = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching disputes:', error);
+      // Only log errors that aren't from aborted requests
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('Request aborted (newer request initiated)');
+      } else {
+        console.error('Error fetching disputes:', error);
+      }
     } finally {
-      setLoading(false);
+      // Only set loading to false if this is still the current request
+      if (abortControllerRef.current === abortController) {
+        setLoading(false);
+      }
     }
   };
 
@@ -161,9 +209,12 @@ const DisputeManagement = () => {
     const emailDomain = extractDomain(email);
     if (!emailDomain) return;
 
-    // Clear any existing interval
+    // Clear any existing interval and abort any pending request
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
 
     // Initial fetch with force update
@@ -172,10 +223,13 @@ const DisputeManagement = () => {
     // Set up polling every 6 seconds
     intervalRef.current = setInterval(() => fetchDisputes(false), 6000);
 
-    // Cleanup interval on unmount or dependency change
+    // Cleanup interval and abort any pending request on unmount or dependency change
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, [email, activeTab]);
