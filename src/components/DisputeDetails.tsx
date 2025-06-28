@@ -237,7 +237,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-[74px]">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Description Section - First */}
@@ -284,11 +284,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   <div className="flex space-x-4">
                     <Button variant="outline" size="sm" className="flex items-center space-x-2">
                       <FileText className="h-4 w-4" />
-                      <span>RAJESH MK.ppt</span>
+                      <span>RAJESH MK.pdf</span>
                     </Button>
                     <Button variant="outline" size="sm" className="flex items-center space-x-2">
                       <FileText className="h-4 w-4" />
-                      <span>RAJESH MK.ppt</span>
+                      <span>RAJESH MK.pdf</span>
                     </Button>
                   </div>
                 </div>
@@ -330,7 +330,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div key={index} className="flex space-x-4">
                   {/* Timeline dot and line */}
                   <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${event.color} flex-shrink-0`}></div>
+                    <div className={`w-3 h-3 rounded-full ${event.status === 'error' ? 'bg-red-500' : event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0`}></div>
                     {index < timelineEvents.length - 1 && (
                       <div className="w-px h-16 bg-gray-200 mt-2"></div>
                     )}
@@ -426,7 +426,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[74px]">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Dispute Details Section */}
@@ -460,11 +460,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div className="flex space-x-4">
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
                     <FileText className="h-4 w-4" />
-                    <span>RAJESH MK.ppt</span>
+                    <span>RAJESH MK.pdf</span>
                   </Button>
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
                     <FileText className="h-4 w-4" />
-                    <span>RAJESH MK.ppt</span>
+                    <span>RAJESH MK.pdf</span>
                   </Button>
                 </div>
               </div>
@@ -519,7 +519,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               <div key={index} className="flex space-x-4">
                 {/* Timeline dot and line */}
                 <div className="flex flex-col items-center">
-                  <div className={`w-3 h-3 rounded-full ${event.color} flex-shrink-0`}></div>
+                  <div className={`w-3 h-3 rounded-full ${event.status === 'error' ? 'bg-red-500' : event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0`}></div>
                   {index < timelineEvents.length - 1 && (
                     <div className="w-px h-16 bg-gray-200 mt-2"></div>
                   )}
