@@ -46,7 +46,7 @@ const DisputeManagement = () => {
       status: apiDispute.status === 'PENDING' ? 'Pending' : 
               apiDispute.status === 'RESOLVED' ? 'Closed' : 'Under Review',
       createdAt: apiDispute.raised_at,
-      priority: 'Medium'
+      priority: apiDispute.priority || 'Medium'
     };
   };
 
@@ -172,39 +172,34 @@ const DisputeManagement = () => {
     <div className="space-y-6">
       {view === 'list' && (
         <>
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Dispute Management</h3>
-              <p className="text-gray-600">Raise and track disputes for fraud reports</p>
+          {/* Tabs and Button Row */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+              <button
+                onClick={() => handleTabChange('raised-by-us')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'raised-by-us'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Disputes Raised by Us
+              </button>
+              <button
+                onClick={() => handleTabChange('raised-against-us')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'raised-against-us'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Disputes Raised Against Us
+              </button>
             </div>
             <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Raise Dispute
             </Button>
-          </div>
-
-          {/* Tab-like buttons */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
-            <button
-              onClick={() => handleTabChange('raised-by-us')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'raised-by-us'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Disputes Raised by Us
-            </button>
-            <button
-              onClick={() => handleTabChange('raised-against-us')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'raised-against-us'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Disputes Raised Against Us
-            </button>
           </div>
 
           {loading ? (

@@ -104,38 +104,38 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
   const getPriorityIcon = (priority: string) => {
     let count = 1;
-    let color = 'text-yellow-500';
+    let color = 'text-green-500';
 
     switch (priority) {
       case 'Low':
         count = 1;
-        color = 'text-yellow-500';
+        color = 'text-green-500';
         break;
       case 'Medium':
         count = 2;
-        color = 'text-orange-600';
+        color = 'text-orange-500';
         break;
       case 'High':
         count = 3;
-        color = 'text-red-600';
+        color = 'text-red-500';
         break;
       case 'Critical':
         count = 3;
-        color = 'text-red-700';
+        color = 'text-red-500';
         break;
       default:
         count = 1;
-        color = 'text-yellow-500';
+        color = 'text-green-500';
     }
 
     return (
       <div className="flex items-center space-x-2">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col">
           {Array.from({ length: count }, (_, index) => (
-            <ChevronUp key={index} className={`h-4 w-4 ${color} stroke-[3] -mb-1`} />
+            <ChevronUp key={index} className={`h-4 w-4 ${color} stroke-[2] ${index > 0 ? '-mt-3' : ''}`} />
           ))}
         </div>
-        <span className="text-red-600 font-medium">{priority}</span>
+        <span className="font-medium">{priority}</span>
       </div>
     );
   };

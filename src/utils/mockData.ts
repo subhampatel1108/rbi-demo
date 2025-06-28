@@ -6,6 +6,7 @@ export interface ApiDispute {
   reason: string;
   status: string;
   raised_at: string;
+  priority: 'Low' | 'Medium' | 'High';
 }
 
 export interface ApiResponse {
@@ -26,7 +27,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "icici",
           "reason": "Mismatch in KYC details",
           "status": "PENDING",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "High"
         },
         {
           "dispute_id": "rep_001",
@@ -34,7 +36,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "axis",
           "reason": "Mismatch in KYC details",
           "status": "RESOLVED",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "Medium"
         },
         {
           "dispute_id": "rep_001",
@@ -42,7 +45,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "sbi",
           "reason": "Mismatch in KYC details",
           "status": "RESOLVED",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "Low"
         },
         {
           "dispute_id": "rep_001",
@@ -50,7 +54,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "kotak",
           "reason": "Mismatch in KYC details",
           "status": "PENDING",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "High"
         },
         {
           "dispute_id": "rep_002",
@@ -58,7 +63,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "icici",
           "reason": "Multiple linked accounts detected",
           "status": "PENDING",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "Medium"
         },
         {
           "dispute_id": "rep_002",
@@ -66,7 +72,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "axis",
           "reason": "Multiple linked accounts detected",
           "status": "RESOLVED",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "Low"
         },
         {
           "dispute_id": "rep_002",
@@ -74,7 +81,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "sbi",
           "reason": "Multiple linked accounts detected",
           "status": "RESOLVED",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "Medium"
         },
         {
           "dispute_id": "rep_002",
@@ -82,7 +90,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "kotak",
           "reason": "Multiple linked accounts detected",
           "status": "PENDING",
-          "raised_at": "2025-06-26 12:29:55.706957"
+          "raised_at": "2025-06-26 12:29:55.706957",
+          "priority": "High"
         }
       ],
       "total_count": 8
@@ -96,7 +105,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "merchant_123",
           "reason": "Suspicious transaction pattern",
           "status": "RESOLVED",
-          "raised_at": "2025-06-26 10:03:43.127213"
+          "raised_at": "2025-06-26 10:03:43.127213",
+          "priority": "High"
         },
         {
           "dispute_id": "report_002",
@@ -104,7 +114,8 @@ export const getMockResponse = (tab: string): ApiResponse => {
           "raised_against_party_id": "merchant_123",
           "reason": "Failed to deliver goods",
           "status": "PENDING",
-          "raised_at": "2025-06-26 10:03:43.127213"
+          "raised_at": "2025-06-26 10:03:43.127213",
+          "priority": "Medium"
         }
       ],
       "total_count": 2

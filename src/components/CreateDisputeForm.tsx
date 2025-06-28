@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
@@ -29,6 +29,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
   const [identifiers, setIdentifiers] = useState<IdentifierObject[]>([
     { identifier_id: '', identity_type: '', reason: '' }
   ]);
+  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const extractDomain = (email: string) => {
@@ -41,6 +42,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
   useEffect(() => {
     if (isOpen) {
       setIdentifiers([{ identifier_id: '', identity_type: '', reason: '' }]);
+      setPriority('Medium');
       setIsSubmitting(false);
     }
   }, [isOpen]);
@@ -60,6 +62,40 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
       i === index ? { ...identifier, [field]: value } : identifier
     );
     setIdentifiers(updated);
+  };
+
+  const getPriorityArrows = (priorityValue: string) => {
+    let count = 1;
+    let color = 'text-green-500';
+
+    switch (priorityValue) {
+      case 'Low':
+        count = 1;
+        color = 'text-green-500';
+        break;
+      case 'Medium':
+        count = 2;
+        color = 'text-orange-500';
+        break;
+      case 'High':
+        count = 3;
+        color = 'text-red-500';
+        break;
+      default:
+        count = 1;
+        color = 'text-green-500';
+    }
+
+    return (
+      <div className="flex flex-col">
+        {Array.from({ length: count }, (_, index) => (
+          <ChevronUp 
+            key={index} 
+            className={`h-4 w-4 ${color} stroke-[2] ${index > 0 ? '-mt-3' : ''}`} 
+          />
+        ))}
+      </div>
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,7 +130,8 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
     try {
       const requestBody = {
         raised_by_party_id: emailDomain,
-        identifier: identifiers
+        identifier: identifiers,
+        priority: priority
       };
 
       const response = await fetch('http://127.0.0.1:8080/dispute', {
@@ -147,6 +184,43 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Priority Selection */}
+          <div className="space-y-4 p-4 border border-gray-200 rounded-lg">
+            <h4 className="font-medium text-gray-900">Dispute Priority</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div 
+                className={`flex items-center p-3 rounded-lg border cursor-pointer ${priority === 'Low' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
+                onClick={() => setPriority('Low')}
+              >
+                <div className="mr-3">{getPriorityArrows('Low')}</div>
+                <div>
+                  <p className="font-medium">Low</p>
+                  <p className="text-sm text-gray-500">Standard issue</p>
+                </div>
+              </div>
+              <div 
+                className={`flex items-center p-3 rounded-lg border cursor-pointer ${priority === 'Medium' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
+                onClick={() => setPriority('Medium')}
+              >
+                <div className="mr-3">{getPriorityArrows('Medium')}</div>
+                <div>
+                  <p className="font-medium">Medium</p>
+                  <p className="text-sm text-gray-500">Important issue</p>
+                </div>
+              </div>
+              <div 
+                className={`flex items-center p-3 rounded-lg border cursor-pointer ${priority === 'High' ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
+                onClick={() => setPriority('High')}
+              >
+                <div className="mr-3">{getPriorityArrows('High')}</div>
+                <div>
+                  <p className="font-medium">High</p>
+                  <p className="text-sm text-gray-500">Critical issue</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {identifiers.map((identifier, index) => (
             <div key={index} className="space-y-4 p-4 border border-gray-200 rounded-lg">
               <div className="flex justify-between items-center">

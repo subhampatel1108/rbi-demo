@@ -29,33 +29,37 @@ const getStatusColor = (status: string) => {
 
 const getPriorityArrows = (priority: string) => {
   let count = 1;
-  let color = 'text-yellow-500'; // more vibrant yellow for low
+  let color = 'text-green-500'; // green for low
 
   switch (priority) {
     case 'Low':
       count = 1;
-      color = 'text-yellow-500';
+      color = 'text-green-500';
       break;
     case 'Medium':
       count = 2;
-      color = 'text-orange-600';
+      color = 'text-orange-500';
       break;
     case 'High':
       count = 3;
-      color = 'text-red-600';
-      break;
-    case 'Critical':
-      count = 3;
-      color = 'text-red-700';
+      color = 'text-red-500';
       break;
     default:
       count = 1;
-      color = 'text-yellow-500';
+      color = 'text-green-500';
   }
 
-  return Array.from({ length: count }, (_, index) => (
-    <ChevronUp key={index} className={`h-4 w-4 ${color} stroke-[3] -mb-1`} />
-  ));
+  // Create a container div with stacked arrows
+  return (
+    <div className="flex flex-col">
+      {Array.from({ length: count }, (_, index) => (
+        <ChevronUp 
+          key={index} 
+          className={`h-4 w-4 ${color} stroke-[2] ${index > 0 ? '-mt-3' : ''}`} 
+        />
+      ))}
+    </div>
+  );
 };
 
 const formatDate = (dateString: string) => {
@@ -85,7 +89,7 @@ const disputeEqual = (prevProps: DisputeRowProps, nextProps: DisputeRowProps) =>
 
 // Memoized row component with custom comparison
 const DisputeRow = React.memo(({ dispute, onViewDispute }: DisputeRowProps) => {
-  
+  // Use the actual priority from the dispute object
   return (
     <TableRow 
       className="cursor-pointer hover:bg-gray-50 transition-colors"
@@ -93,10 +97,10 @@ const DisputeRow = React.memo(({ dispute, onViewDispute }: DisputeRowProps) => {
     >
       <TableCell className="font-medium">
         <div className="flex items-center space-x-2">
-          <span>{dispute.disputeId}</span>
-          <div className="flex flex-col items-center">
+          <span className="flex items-center space-x-1">
+            <span>{dispute.disputeId}</span>
             {getPriorityArrows(dispute.priority)}
-          </div>
+          </span>
         </div>
       </TableCell>
       <TableCell>{dispute.reason}</TableCell>
