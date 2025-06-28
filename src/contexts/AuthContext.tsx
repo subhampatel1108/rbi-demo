@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface AuthContextType {
   hasLoggedIn: boolean;
   email: string;
+  emailDomain: string;
   login: (email: string) => void;
   logout: () => void;
 }
@@ -21,6 +22,14 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const getEmailDomain = (email: string): string => {
+  const atIndex = email.indexOf('@');
+  if (atIndex === -1) return '';
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.indexOf('.');
+  return dotIndex === -1 ? domain : domain.slice(0, dotIndex);
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [hasLoggedIn, setHasLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
@@ -35,9 +44,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setEmail('');
   };
 
+  const emailDomain = getEmailDomain(email);
+
   const value = {
     hasLoggedIn,
     email,
+    emailDomain,
     login,
     logout,
   };

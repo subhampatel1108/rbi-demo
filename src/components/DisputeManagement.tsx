@@ -20,7 +20,7 @@ export interface Dispute {
 }
 
 const DisputeManagement = () => {
-  const { email } = useAuth();
+  const { email, emailDomain } = useAuth();
   const { toast } = useToast();
   const [view, setView] = useState<'list' | 'details'>('list');
   const [activeTab, setActiveTab] = useState<'raised-by-us' | 'raised-against-us'>('raised-by-us');
@@ -30,6 +30,17 @@ const DisputeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [newlyCreatedDisputes, setNewlyCreatedDisputes] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getToastStyle = (domain: string) => {
+    switch (domain.toLowerCase()) {
+      case 'hdfc':
+        return 'border-[#B9DCFF] bg-[#B9DCFF] text-blue-900';
+      case 'icici':
+        return 'border-[#F8C6C7] bg-[#F8C6C7] text-red-900';
+      default:
+        return 'border-blue-200 bg-blue-50 text-blue-900'; // Default info style
+    }
+  };
 
   const extractDomain = (email: string) => {
     if (!email || !email.includes('@')) return '';
@@ -84,7 +95,7 @@ const DisputeManagement = () => {
         setDisputes(convertedDisputes);
         toast({
           title: "Updates Detected!",
-          variant: "info",
+          className: getToastStyle(emailDomain),
         });
       } else {
         // Check if disputes have changed for polling updates
@@ -103,7 +114,7 @@ const DisputeManagement = () => {
           if (disputesHaveChanged(convertedDisputes, currentDisputes)) {
             toast({
               title: "Updates Detected!",
-              variant: "info",
+              className: getToastStyle(emailDomain),
             });
             return convertedDisputes;
           }

@@ -41,19 +41,70 @@ const AppSidebar = ({ activeModule, onModuleChange }: {
   activeModule: string;
   onModuleChange: (module: string) => void;
 }) => {
-  const { email, logout } = useAuth();
+  const { email, emailDomain, logout } = useAuth();
   const { state, toggleSidebar } = useSidebar();
+
+  const getSidebarColor = (domain: string) => {
+    switch (domain.toLowerCase()) {
+      case 'hdfc':
+        return '#B9DCFF';
+      case 'icici':
+        return '#F8C6C7';
+      default:
+        return '#f1f5f9'; // Default sidebar color
+    }
+  };
+
+  const getIconBackgroundColor = (domain: string) => {
+    switch (domain.toLowerCase()) {
+      case 'hdfc':
+        return '#A0C8FF'; // Darker blue for HDFC icons
+      case 'icici':
+        return '#F0B0B3'; // Darker pink for ICICI icons
+      default:
+        return '#e2e8f0'; // Darker gray for default icons
+    }
+  };
+
+  const getBankLogo = (domain: string) => {
+    switch (domain.toLowerCase()) {
+      case 'hdfc':
+        return '/(LT) HDFC Bank.png';
+      case 'icici':
+        return '/(LT) ICICI Bank.png';
+      default:
+        return null; // Will show Shield icon as fallback
+    }
+  };
+
+  const sidebarStyle = {
+    backgroundColor: getSidebarColor(emailDomain)
+  };
+
+  const iconBackgroundStyle = {
+    backgroundColor: getIconBackgroundColor(emailDomain)
+  };
+
+  const logoSrc = getBankLogo(emailDomain);
 
   return (
     <div className="relative">
-      <Sidebar collapsible="icon" className="w-24">
-        <SidebarHeader className="border-b p-2">
+      <Sidebar collapsible="icon" className="w-24" style={sidebarStyle}>
+        <SidebarHeader className="border-b p-2" style={sidebarStyle}>
           <div className="flex justify-center">
-            <Shield className="h-16 w-16 text-blue-600" />
+            {logoSrc ? (
+              <img 
+                src={logoSrc} 
+                alt={`${emailDomain.toUpperCase()} Bank Logo`}
+                className="h-16 w-16 object-contain"
+              />
+            ) : (
+              <Shield className="h-16 w-16 text-blue-600" />
+            )}
           </div>
         </SidebarHeader>
         
-        <SidebarContent>
+        <SidebarContent style={sidebarStyle}>
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -65,6 +116,7 @@ const AppSidebar = ({ activeModule, onModuleChange }: {
                           isActive={activeModule === item.key}
                           onClick={() => onModuleChange(item.key)}
                           className="w-full justify-center"
+                          style={activeModule === item.key ? iconBackgroundStyle : {}}
                         >
                           <item.icon className="h-7 w-7" />
                         </SidebarMenuButton>
@@ -80,7 +132,7 @@ const AppSidebar = ({ activeModule, onModuleChange }: {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="border-t p-4">
+        <SidebarFooter className="border-t p-4" style={sidebarStyle}>
           <div className="flex flex-col items-center gap-3">
             <Tooltip>
               <TooltipTrigger asChild>
