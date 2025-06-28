@@ -346,11 +346,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   <span className="text-gray-500">Attachments</span>
                   <div className="flex space-x-4">
                     <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4" />
+                      <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
                       <span>RAJESH MK.pdf</span>
                     </Button>
                     <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4" />
+                      <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
                       <span>RAJESH MK.pdf</span>
                     </Button>
                   </div>
@@ -402,11 +402,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           <div className="lg:col-span-1">
             <div className="relative">
               {/* Base vertical line */}
-              <div className="absolute left-[6px] top-[6px] bottom-0 w-0.5 bg-blue-200"></div>
+              <div className="absolute left-[6px] top-[6px] bottom-0 w-px bg-blue-200"></div>
               
               {/* Progress line - shows actual completion */}
               <div 
-                className="absolute left-[5px] top-[6px] w-1 bg-blue-500 transition-all duration-500"
+                className="absolute left-[6px] top-[6px] w-px bg-blue-500 transition-all duration-500"
                 style={{
                   height: dispute.status === 'PENDING' 
                     ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
@@ -421,7 +421,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               {/* Red line segment for rejected disputes */}
               {dispute.status === 'REJECTED' && (
                 <div 
-                  className="absolute left-[5px] w-1 bg-red-500 transition-all duration-500"
+                  className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
                   style={{
                     top: 'calc(100% - 80px)', // Starts where blue line ends
                     height: '120px' // Covers the final step and extends beyond
@@ -562,11 +562,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <span className="text-gray-500">Attachments</span>
                 <div className="flex space-x-4">
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4" />
+                    <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
                     <span>RAJESH MK.pdf</span>
                   </Button>
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4" />
+                    <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
                     <span>RAJESH MK.pdf</span>
                   </Button>
                 </div>
@@ -618,18 +618,18 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         <div className="lg:col-span-1">
           <div className="relative">
             {/* Base vertical line */}
-            <div className="absolute left-[6px] top-[6px] bottom-0 w-0.5 bg-blue-200"></div>
+            <div className="absolute left-[6px] top-[6px] bottom-0 w-px bg-blue-200"></div>
             
             {/* Progress line - shows actual completion */}
             <div 
-              className="absolute left-[5px] top-[6px] w-1 bg-blue-500 transition-all duration-500"
+              className="absolute left-[6px] top-[6px] w-px bg-blue-500 transition-all duration-500"
               style={{
                 height: dispute.status === 'PENDING' 
                   ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
                   : dispute.status === 'RESOLVED'
                   ? '100%' // Covers all steps for resolved
                   : dispute.status === 'REJECTED'
-                  ? 'calc(100% - 120px)' // Stops before the final step for rejected
+                  ? 'calc(100% - 80px)' // Stops before the final step for rejected
                   : '70px' // Default for other statuses
               }}
             ></div>
@@ -637,7 +637,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
             {/* Red line segment for rejected disputes */}
             {dispute.status === 'REJECTED' && (
               <div 
-                className="absolute left-[5px] w-1 bg-red-500 transition-all duration-500"
+                className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
                 style={{
                   top: 'calc(100% - 80px)', // Starts where blue line ends
                   height: '120px' // Covers the final step and extends beyond
