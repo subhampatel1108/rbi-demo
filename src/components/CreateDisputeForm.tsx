@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, X, ChevronUp } from 'lucide-react';
+import { Plus, X, ChevronUp, Paperclip } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
+import { API_CONFIG, API_ENDPOINTS } from '@/constants';
 
 interface IdentifierObject {
   identifier_id: string;
@@ -29,8 +30,9 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
   const [identifiers, setIdentifiers] = useState<IdentifierObject[]>([
     { identifier_id: '', identity_type: '', reason: '' }
   ]);
-  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const extractDomain = (email: string) => {
     if (!email || !email.includes('@')) return '';
@@ -42,8 +44,8 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
   useEffect(() => {
     if (isOpen) {
       setIdentifiers([{ identifier_id: '', identity_type: '', reason: '' }]);
-      setPriority('Medium');
       setIsSubmitting(false);
+      setAttachedFiles([]);
     }
   }, [isOpen]);
 
@@ -64,38 +66,23 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
     setIdentifiers(updated);
   };
 
-  const getPriorityArrows = (priorityValue: string) => {
-    let count = 1;
-    let color = 'text-green-500';
-
-    switch (priorityValue) {
-      case 'Low':
-        count = 1;
-        color = 'text-green-500';
-        break;
-      case 'Medium':
-        count = 2;
-        color = 'text-orange-500';
-        break;
-      case 'High':
-        count = 3;
-        color = 'text-red-500';
-        break;
-      default:
-        count = 1;
-        color = 'text-green-500';
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+      if (pdfFiles.length !== files.length) {
+        toast({
+          title: "Invalid File Type",
+          description: "Only PDF files are allowed",
+          variant: "destructive"
+        });
+      }
+      setAttachedFiles(prev => [...prev, ...pdfFiles]);
     }
+  };
 
-    return (
-      <div className="flex flex-col">
-        {Array.from({ length: count }, (_, index) => (
-          <ChevronUp 
-            key={index} 
-            className={`h-4 w-4 ${color} stroke-[2] ${index > 0 ? '-mt-3' : ''}`} 
-          />
-        ))}
-      </div>
-    );
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,11 +123,10 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
       const requestBody = {
         raised_by_party_id: emailDomain,
         identifier: identifiers,
-        priority: priority,
         dispute_id: generateDisputeId() // Add generated dispute ID
       };
 
-      const response = await fetch('http://127.0.0.1:8080/dispute', {
+      const response = await fetch(`${API_CONFIG.HOSTNAME}${API_ENDPOINTS.CREATE_DISPUTE}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,43 +179,6 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Priority Selection */}
-          <div className="space-y-4 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium text-gray-900">Dispute Priority</h4>
-            <div className="grid grid-cols-3 gap-4">
-              <div 
-                className={`flex items-center p-3 rounded-lg border cursor-pointer ${priority === 'Low' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
-                onClick={() => setPriority('Low')}
-              >
-                <div className="mr-3">{getPriorityArrows('Low')}</div>
-                <div>
-                  <p className="font-medium">Low</p>
-                  <p className="text-sm text-gray-500">Standard issue</p>
-                </div>
-              </div>
-              <div 
-                className={`flex items-center p-3 rounded-lg border cursor-pointer ${priority === 'Medium' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
-                onClick={() => setPriority('Medium')}
-              >
-                <div className="mr-3">{getPriorityArrows('Medium')}</div>
-                <div>
-                  <p className="font-medium">Medium</p>
-                  <p className="text-sm text-gray-500">Important issue</p>
-                </div>
-              </div>
-              <div 
-                className={`flex items-center p-3 rounded-lg border cursor-pointer ${priority === 'High' ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
-                onClick={() => setPriority('High')}
-              >
-                <div className="mr-3">{getPriorityArrows('High')}</div>
-                <div>
-                  <p className="font-medium">High</p>
-                  <p className="text-sm text-gray-500">Critical issue</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {identifiers.map((identifier, index) => (
             <div key={index} className="space-y-4 p-4 border border-gray-200 rounded-lg">
               <div className="flex justify-between items-center">
@@ -262,10 +211,9 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="PAN">PAN</SelectItem>
-                        <SelectItem value="AADHAAR">AADHAAR</SelectItem>
-                        <SelectItem value="PHONE">PHONE</SelectItem>
-                        <SelectItem value="PASSPORT">PASSPORT</SelectItem>
-                        <SelectItem value="VOTER ID">VOTER ID</SelectItem>
+                        <SelectItem value="UPI ID">UPI ID</SelectItem>
+                        <SelectItem value="MOBILE">MOBILE</SelectItem>
+                        <SelectItem value="ACCOUNT_NUMBER">ACCOUNT NUMBER</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input
@@ -297,12 +245,54 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             <Button
               type="button"
               onClick={addIdentifier}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex items-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
             >
               <Plus className="h-4 w-4" />
               <span>Add Another Identifier</span>
             </Button>
           </div>
+
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
+            >
+              <Paperclip className="h-4 w-4" />
+              <span>Attach PDF</span>
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              multiple
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </div>
+
+          {/* Display attached files */}
+          {attachedFiles.length > 0 && (
+            <div className="space-y-2">
+              <Label>Attached Files</Label>
+              <div className="space-y-2">
+                {attachedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                    <span className="text-sm text-gray-700">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                      className="p-1 h-6 w-6"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex space-x-4 pt-4">
             <Button type="submit" disabled={isSubmitting}>

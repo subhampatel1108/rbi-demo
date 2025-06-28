@@ -8,6 +8,7 @@ import DisputeList from '@/components/DisputeList';
 import DisputeDetails from '@/components/DisputeDetails';
 import TableSkeleton from '@/components/ui/TableSkeleton';
 import { MOCK_MODE, getMockResponse, ApiDispute, ApiResponse } from '@/utils/mockData';
+import { API_CONFIG, API_ENDPOINTS } from '@/constants';
 
 export interface Dispute {
   id: string;
@@ -31,6 +32,26 @@ const DisputeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [newlyCreatedDisputes, setNewlyCreatedDisputes] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showUpdateIndicator, setShowUpdateIndicator] = useState(false);
+
+  // Subtle update indicator component
+  const UpdateIndicator = () => {
+    return (
+      <div 
+        className={`fixed bottom-6 right-6 z-[9999] w-4 h-4 bg-blue-500 rounded-full transition-opacity duration-[800ms] ease-in-out pointer-events-none ${
+          showUpdateIndicator ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+    );
+  };
+
+  // Function to show subtle update notification
+  const showUpdateNotification = () => {
+    setShowUpdateIndicator(true);
+    setTimeout(() => {
+      setShowUpdateIndicator(false);
+    }, 2000); // Show for 2 seconds instead of 1
+  };
 
   const getToastStyle = (domain: string) => {
     switch (domain.toLowerCase()) {
@@ -77,8 +98,8 @@ const DisputeManagement = () => {
         data = getMockResponse(activeTab);
       } else {
         const baseUrl = activeTab === 'raised-against-us' 
-          ? `http://localhost:3000/disputes/assigned?party_id=${emailDomain}`
-          : `http://localhost:3000/disputes?party_id=${emailDomain}`;
+          ? `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_ASSIGNED_DISPUTES}?party_id=${emailDomain}`
+          : `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_DISPUTES}?party_id=${emailDomain}`;
         
         const response = await fetch(baseUrl);
         if (response.ok) {
@@ -94,10 +115,7 @@ const DisputeManagement = () => {
       // Always update on force update (tab switch) or if data actually changed
       if (forceUpdate) {
         setDisputes(convertedDisputes);
-        toast({
-          title: "Updates Detected!",
-          className: getToastStyle(emailDomain),
-        });
+        showUpdateNotification();
       } else {
         // Check if disputes have changed for polling updates
         setDisputes(currentDisputes => {
@@ -113,10 +131,7 @@ const DisputeManagement = () => {
           };
 
           if (disputesHaveChanged(convertedDisputes, currentDisputes)) {
-            toast({
-              title: "Updates Detected!",
-              className: getToastStyle(emailDomain),
-            });
+            showUpdateNotification();
             return convertedDisputes;
           }
           return currentDisputes;
@@ -207,6 +222,9 @@ const DisputeManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Update Indicator */}
+      <UpdateIndicator />
+      
       {view === 'list' && (
         <>
           {/* Tabs and Button Row */}

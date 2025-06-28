@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, FileText, ChevronUp, Menu, X, Check } from 'lucide-react';
+import { ArrowLeft, FileText, ChevronUp, Menu, X, Check, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
+import { API_CONFIG, API_ENDPOINTS } from '@/constants';
 
 interface DisputeDetailsProps {
   dispute: Dispute;
@@ -20,12 +21,70 @@ interface DisputeDetailsProps {
 }
 
 const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionComplete }: DisputeDetailsProps) => {
-  const { email } = useAuth();
+  const { email, emailDomain } = useAuth();
   const { toast } = useToast();
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'reject' | 'resolve'>('resolve');
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previousStatus, setPreviousStatus] = useState<string>(dispute.status);
+  const [statusBanner, setStatusBanner] = useState<{
+    show: boolean;
+    status: 'RESOLVED' | 'REJECTED';
+    reason: string;
+  } | null>(null);
+
+  // Detect status changes and show notifications/banners
+  useEffect(() => {
+    if (previousStatus === 'PENDING' && (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')) {
+      // Show timed notification (3 seconds)
+      toast({
+        title: `Dispute ${dispute.status.toLowerCase()}`,
+        description: dispute.reason || `Dispute has been ${dispute.status.toLowerCase()}`,
+        variant: dispute.status === 'RESOLVED' ? 'default' : 'destructive',
+        duration: 3000,
+      });
+
+      // Show persistent banner
+      setStatusBanner({
+        show: true,
+        status: dispute.status as 'RESOLVED' | 'REJECTED',
+        reason: dispute.reason || `Dispute has been ${dispute.status.toLowerCase()}`,
+      });
+    }
+    setPreviousStatus(dispute.status);
+  }, [dispute.status, dispute.reason, previousStatus, toast]);
+
+  // Banner component
+  const StatusBanner = () => {
+    if (!statusBanner?.show) return null;
+
+    const bgColor = statusBanner.status === 'RESOLVED' 
+      ? 'bg-green-50 border-green-200 text-green-800' 
+      : 'bg-red-50 border-red-200 text-red-800';
+    
+    const icon = statusBanner.status === 'RESOLVED' 
+      ? <CheckCircle className="h-5 w-5 text-green-600" />
+      : <XCircle className="h-5 w-5 text-red-600" />;
+
+    return (
+      <div className={`${bgColor} border rounded-lg p-4 mb-6 flex items-start space-x-3`}>
+        {icon}
+        <div className="flex-1">
+          <h4 className="font-semibold">
+            Dispute {statusBanner.status === 'RESOLVED' ? 'Resolved' : 'Rejected'}
+          </h4>
+          <p className="text-sm mt-1">{statusBanner.reason}</p>
+        </div>
+        <button
+          onClick={() => setStatusBanner(null)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
 
   const handleActionClick = (action: 'reject' | 'resolve') => {
     setSelectedAction(action);
@@ -50,7 +109,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         feedback: feedback.trim()
       };
 
-      const response = await fetch('http://127.0.0.1:8080/update', {
+      const response = await fetch(`${API_CONFIG.HOSTNAME}${API_ENDPOINTS.UPDATE_DISPUTE}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,15 +118,29 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
       });
 
       if (response.ok) {
+        const result = await response.json();
+        
+        // Show immediate success notification
         toast({
           title: "Success",
           description: `Dispute ${selectedAction === 'resolve' ? 'resolved' : 'rejected'} successfully`,
           variant: "info"
         });
         
+        // If API returns a reason, use it for the banner
+        const newStatus = selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED';
+        const reason = result.reason || feedback.trim();
+        
+        // Update banner with new status
+        setStatusBanner({
+          show: true,
+          status: newStatus as 'RESOLVED' | 'REJECTED',
+          reason: reason,
+        });
+        
         setIsActionModalOpen(false);
         setFeedback('');
-        onBack(); // Return to list view
+        
         if (onActionComplete) {
           onActionComplete(); // Trigger force update
         }
@@ -151,42 +224,42 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
   const timelineEvents = [
     {
-      title: "Order Created",
-      time: "12 Aug, 11:39:35 PM",
-      description: "Transaction Created\nGeddit initiated txns",
+      title: "Dispute Raised",
+      time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 09:30 AM",
+      description: "Dispute submitted by customer\nInitial dispute documentation received",
       status: "completed",
-      color: "bg-green-500"
+      color: "bg-blue-500"
     },
     {
-      title: "Gateway Selected",
-      time: "12 Aug, 11:39:35 PM",
-      description: "Pinelabs chosen as the preferred gateway based on Gateway Score: .89",
+      title: "Internal Review Initiated",
+      time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 10:45 AM",
+      description: "Internal team assigned for review\nPreliminary assessment started",
       status: "completed",
-      color: "bg-green-500"
+      color: "bg-blue-500"
     },
     {
-      title: "Payment Initiated",
-      time: "12 Aug, 11:39:35 PM",
-      description: "PayStart Triggered\nSub information about this step",
+      title: "Fraud Committee Decision Issued",
+      time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 02:15 PM",
+      description: "Committee reviewed all evidence\nDecision reached based on findings",
       status: "completed",
-      color: "bg-green-500"
+      color: "bg-blue-500"
     },
     {
-      title: "Order Status Check",
-      time: "12 Aug, 11:39:35 PM",
-      description: "Status Check With PG\nPG approved the transaction",
-      status: "error",
-      color: "bg-red-500"
-    },
-    {
-      title: "PG Webhook Received",
-      time: "12 Aug, 11:39:35 PM",
-      description: "Information about this, maybe the webhook ID or event name can be added here",
+      title: "Registry Update Requested",
+      time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 03:30 PM",
+      description: "Update request sent to central registry\nStatus change initiated in system",
       status: "completed",
-      color: "bg-red-500"
+      color: "bg-blue-500"
     },
     {
-      title: "Order Status Check",
+      title: "Customer Notified",
+      time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 04:45 PM",
+      description: "Notification sent to customer via email\nDecision communicated with detailed reasoning",
+      status: "completed",
+      color: "bg-blue-500"
+    },
+    {
+      title: "Dispute Resolved",
       time: "",
       description: "",
       status: "pending",
@@ -207,7 +280,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           >
             <ArrowLeft className="h-6 w-6" /> Back
           </Button>
-          {dispute.status !== 'RESOLVED' && (
+          {dispute.status !== 'RESOLVED' && dispute.status !== 'REJECTED' && (
             <div className="flex space-x-3">
               <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleActionClick('reject')}>
                 <X className="h-4 w-4" />
@@ -220,6 +293,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
             </div>
           )}
         </div>
+
+        {/* Status Banner */}
+        <StatusBanner />
 
         {/* Dispute ID and Status */}
         <div className="space-y-2 mb-8">
@@ -237,7 +313,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-[74px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-[80px]">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Description Section - First */}
@@ -325,31 +401,33 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
           {/* Right Column - Timeline */}
           <div className="lg:col-span-1">
-            <div className="space-y-6">
-              {timelineEvents.map((event, index) => (
-                <div key={index} className="flex space-x-4">
-                  {/* Timeline dot and line */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${event.status === 'error' ? 'bg-red-500' : event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0`}></div>
-                    {index < timelineEvents.length - 1 && (
-                      <div className="w-px h-16 bg-gray-200 mt-2"></div>
-                    )}
-                  </div>
-                  
-                  {/* Timeline content */}
-                  <div className="flex-1 pb-8">
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
-                      {event.time && (
-                        <span className="text-xs text-gray-500 ml-2">{event.time}</span>
+            <div className="relative">
+              {/* Continuous vertical line */}
+              <div className="absolute left-[6px] top-[6px] bottom-0 w-0.5 bg-blue-200"></div>
+              
+              <div className="space-y-6">
+                {timelineEvents.map((event, index) => (
+                  <div key={index} className="flex space-x-4 relative">
+                    {/* Timeline dot */}
+                    <div className="flex flex-col items-center relative z-10">
+                      <div className={`w-3 h-3 rounded-full ${event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0 border-2 border-white`}></div>
+                    </div>
+                    
+                    {/* Timeline content */}
+                    <div className="flex-1 pb-8">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                        {event.time && (
+                          <span className="text-xs text-gray-500 ml-2">{event.time}</span>
+                        )}
+                      </div>
+                      {event.description && (
+                        <p className="text-xs text-gray-500 whitespace-pre-line">{event.description}</p>
                       )}
                     </div>
-                    {event.description && (
-                      <p className="text-xs text-gray-500 whitespace-pre-line">{event.description}</p>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -410,6 +488,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         </Button>
       </div>
 
+      {/* Status Banner */}
+      <StatusBanner />
+
       {/* Dispute ID and Status - full width */}
       <div className="space-y-2 mb-8">
         <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
@@ -426,7 +507,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[74px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[80px]">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           {/* Dispute Details Section */}
@@ -514,31 +595,33 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
         {/* Right Column - Timeline */}
         <div className="lg:col-span-1">
-          <div className="space-y-6">
-            {timelineEvents.map((event, index) => (
-              <div key={index} className="flex space-x-4">
-                {/* Timeline dot and line */}
-                <div className="flex flex-col items-center">
-                  <div className={`w-3 h-3 rounded-full ${event.status === 'error' ? 'bg-red-500' : event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0`}></div>
-                  {index < timelineEvents.length - 1 && (
-                    <div className="w-px h-16 bg-gray-200 mt-2"></div>
-                  )}
-                </div>
-                
-                {/* Timeline content */}
-                <div className="flex-1 pb-8">
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
-                    {event.time && (
-                      <span className="text-xs text-gray-500 ml-2">{event.time}</span>
+          <div className="relative">
+            {/* Continuous vertical line */}
+            <div className="absolute left-[6px] top-[6px] bottom-0 w-0.5 bg-blue-200"></div>
+            
+            <div className="space-y-6">
+              {timelineEvents.map((event, index) => (
+                <div key={index} className="flex space-x-4 relative">
+                  {/* Timeline dot */}
+                  <div className="flex flex-col items-center relative z-10">
+                    <div className={`w-3 h-3 rounded-full ${event.status === 'pending' ? 'bg-gray-300' : 'bg-blue-500'} flex-shrink-0 border-2 border-white`}></div>
+                  </div>
+                  
+                  {/* Timeline content */}
+                  <div className="flex-1 pb-8">
+                    <div className="flex justify-between items-start mb-1">
+                      <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                      {event.time && (
+                        <span className="text-xs text-gray-500 ml-2">{event.time}</span>
+                      )}
+                    </div>
+                    {event.description && (
+                      <p className="text-xs text-gray-500 whitespace-pre-line">{event.description}</p>
                     )}
                   </div>
-                  {event.description && (
-                    <p className="text-xs text-gray-500 whitespace-pre-line">{event.description}</p>
-                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

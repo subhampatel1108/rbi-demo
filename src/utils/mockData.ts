@@ -15,7 +15,7 @@ export interface ApiResponse {
 }
 
 // Mock mode flag
-export const MOCK_MODE = true;
+export const MOCK_MODE = false;
 
 export const getMockResponse = (tab: string): ApiResponse => {
   if (tab === 'raised-by-us') {
