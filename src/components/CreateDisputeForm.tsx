@@ -239,7 +239,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             <Button
               type="button"
               onClick={addIdentifier}
-              className="flex items-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
+              className="w-64 flex items-center justify-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
             >
               <Plus className="h-4 w-4" />
               <span>Add Another Identifier</span>
@@ -250,7 +250,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
+              className="w-64 flex items-center justify-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
             >
               <Paperclip className="h-4 w-4" />
               <span>Attach PDF</span>
