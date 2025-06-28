@@ -293,12 +293,11 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             </div>
           ))}
 
-          <div className="flex justify-center">
+          <div className="flex justify-start">
             <Button
               type="button"
-              variant="outline"
               onClick={addIdentifier}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="h-4 w-4" />
               <span>Add Another Identifier</span>

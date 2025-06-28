@@ -200,19 +200,25 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
       <div className="max-w-7xl mx-auto p-6">
         {/* Header with back button and action buttons */}
         <div className="flex items-center justify-between mb-8">
-          <Button variant="ghost" size="sm" onClick={onBack} className="p-2">
-            <ArrowLeft className="h-5 w-5" />
+          <Button 
+            variant="ghost" 
+            onClick={onBack} 
+            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200"
+          >
+            <ArrowLeft className="h-6 w-6" /> Back
           </Button>
-          <div className="flex space-x-3">
-            <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleActionClick('reject')}>
-              <X className="h-4 w-4" />
-              <span>Reject</span>
-            </Button>
-            <Button className="flex items-center space-x-2 bg-black text-white hover:bg-gray-800" onClick={() => handleActionClick('resolve')}>
-              <Check className="h-4 w-4" />
-              <span>Resolve</span>
-            </Button>
-          </div>
+          {dispute.status !== 'RESOLVED' && (
+            <div className="flex space-x-3">
+              <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleActionClick('reject')}>
+                <X className="h-4 w-4" />
+                <span>Reject</span>
+              </Button>
+              <Button className="flex items-center space-x-2 bg-black text-white hover:bg-gray-800" onClick={() => handleActionClick('resolve')}>
+                <Check className="h-4 w-4" />
+                <span>Resolve</span>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Dispute ID and Status */}
