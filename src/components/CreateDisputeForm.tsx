@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
 import { API_CONFIG, API_ENDPOINTS } from '@/constants';
-import { MOCK_MODE, mockCreateDispute } from '@/utils/mockData';
+import { MOCK_MODE, mockCreateDispute, validateIdentifiersInRegistry } from '@/utils/mockData';
 
 interface IdentifierObject {
   identifier_id: string;
@@ -111,6 +111,19 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
         variant: "destructive"
       });
       return;
+    }
+
+    // Validate identifiers exist in central registry (only in mock mode)
+    if (MOCK_MODE) {
+      const validation = validateIdentifiersInRegistry(identifiers);
+      if (!validation.isValid && validation.missingIdentifier) {
+        toast({
+          title: "Identifier Not Found",
+          description: `${validation.missingIdentifier.identity_type} with value ${validation.missingIdentifier.identifier_id} isn't available in central registry`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);

@@ -139,6 +139,26 @@ const findTargetParties = (identifiers: ApiIdentifier[]): string[] => {
   return Array.from(targetParties);
 };
 
+// Helper function to validate if all identifiers exist in the central registry
+export const validateIdentifiersInRegistry = (identifiers: ApiIdentifier[]): { isValid: boolean; missingIdentifier?: ApiIdentifier } => {
+  const registry: NegativeRegistryEntry[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.NEGATIVE_REGISTRY) || '[]'
+  );
+  
+  for (const identifier of identifiers) {
+    const registryEntry = registry.find(entry => 
+      entry.identifier_id === identifier.identifier_id && 
+      entry.identifier_type === identifier.identity_type
+    );
+    
+    if (!registryEntry) {
+      return { isValid: false, missingIdentifier: identifier };
+    }
+  }
+  
+  return { isValid: true };
+};
+
 // Mock API: Create Dispute
 export const mockCreateDispute = (disputeData: {
   raised_by_party_id: string;
