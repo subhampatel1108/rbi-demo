@@ -501,13 +501,16 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                             : (index < 2 ? 'text-gray-900' : 'text-gray-400')
                         }`}>{event.title}</h4>
                         {event.time && (
-                          <span className={`text-xs ml-2 ${
-                            dispute.status === 'PENDING' 
-                              ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                              ? 'text-gray-500'
-                              : (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                          }`}>{event.time}</span>
+                          // Only show time if milestone is not greyed out
+                          (dispute.status === 'PENDING' ? index < 2 : true) && (
+                            <span className={`text-xs ml-2 ${
+                              dispute.status === 'PENDING' 
+                                ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                                : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                                ? 'text-gray-500'
+                                : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                            }`}>{event.time}</span>
+                          )
                         )}
                       </div>
                       {event.description && (
@@ -742,13 +745,16 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                           : (index < 2 ? 'text-gray-900' : 'text-gray-400')
                       }`}>{event.title}</h4>
                       {event.time && (
-                        <span className={`text-xs ml-2 ${
-                          dispute.status === 'PENDING' 
-                            ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                            ? 'text-gray-500'
-                            : (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                        }`}>{event.time}</span>
+                        // Only show time if milestone is not greyed out
+                        (dispute.status === 'PENDING' ? index < 2 : true) && (
+                          <span className={`text-xs ml-2 ${
+                            dispute.status === 'PENDING' 
+                              ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                              ? 'text-gray-500'
+                              : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                          }`}>{event.time}</span>
+                        )
                       )}
                     </div>
                     {event.description && (

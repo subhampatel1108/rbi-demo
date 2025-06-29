@@ -62,7 +62,7 @@ const BusinessAnalytics = () => {
   const kpiCards = [
     {
       title: 'Total Revenue',
-      value: '$328,000',
+      value: '₹328,000',
       change: '+12.5%',
       trend: 'up',
       icon: DollarSign,
@@ -70,7 +70,7 @@ const BusinessAnalytics = () => {
     },
     {
       title: 'Fraud Loss',
-      value: '$10,800',
+      value: '₹10,800',
       change: '-23.4%',
       trend: 'down',
       icon: AlertTriangle,
@@ -97,22 +97,7 @@ const BusinessAnalytics = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Business Analytics</h1>
-          <p className="text-gray-600 mt-2">Monitor business performance and fraud impact</p>
-        </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            Last 6 Months
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-        </div>
-      </div>
+     
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -162,7 +147,7 @@ const BusinessAnalytics = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, '']} />
+                  <Tooltip formatter={(value) => [`₹${value.toLocaleString()}`, '']} />
                   <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
                   <Bar dataKey="fraudLoss" fill="#ef4444" name="Fraud Loss" />
                 </BarChart>
@@ -239,7 +224,7 @@ const BusinessAnalytics = () => {
                       <div className="text-right">
                         <div className="font-semibold">{item.value} cases</div>
                         <div className="text-sm text-gray-600">
-                          ${(item.value * 150).toLocaleString()} avg loss
+                          ₹{(item.value * 800).toLocaleString()} avg loss
                         </div>
                       </div>
                     </div>
@@ -312,13 +297,12 @@ const BusinessAnalytics = () => {
             </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Prevention Savings</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">$145K</div>
+            <div className="text-3xl font-bold text-purple-600">₹1,45,000</div>
             <p className="text-sm text-gray-600 mt-1">
               Estimated fraud prevented this quarter
             </p>
