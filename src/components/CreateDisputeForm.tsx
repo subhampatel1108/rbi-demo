@@ -262,7 +262,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             </div>
           ))}
 
-          <div className="flex justify-center">
+          <div className="flex justify-start">
             <Button
               type="button"
               onClick={addIdentifier}
