@@ -206,7 +206,6 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Raise New Dispute</DialogTitle>
-          <DialogDescription>Create a dispute for a fraud report</DialogDescription>
           <p className="text-sm text-gray-500 mt-2">
             <strong>Note:</strong> Dispute ID will be auto-generated on submit
           </p>

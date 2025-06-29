@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Eye, ChevronUp } from 'lucide-react';
 import { Dispute } from '@/components/DisputeManagement';
 
@@ -109,7 +110,18 @@ const DisputeRow = React.memo(({ dispute, onViewDispute, isNewlyCreated }: Dispu
           </span>
         </div>
       </TableCell>
-      <TableCell>{dispute.reason}</TableCell>
+      <TableCell className="max-w-16">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="truncate">
+              {dispute.reason}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="max-w-xs">{dispute.reason}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TableCell>
       <TableCell>
                   <Badge 
             className={`${getStatusColor(dispute.status)} text-xs font-bold`}
