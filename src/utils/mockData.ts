@@ -14,6 +14,7 @@ export interface ApiDispute {
   raised_at: string;
   priority: 'Low' | 'Medium' | 'High';
   identities: ApiIdentifier[];
+  resolution_comments?: string;
 }
 
 export interface ApiResponse {
@@ -21,191 +22,229 @@ export interface ApiResponse {
   total_count: number;
 }
 
+// Central Negative Registry Interface
+export interface NegativeRegistryEntry {
+  identifier_type: 'PAN' | 'ACCOUNT_NUMBER' | 'UPI_ID' | 'MOBILE';
+  identifier_id: string;
+  initial_flag_by: string;
+}
+
 // Mock mode flag
 export const MOCK_MODE = true;
 
-export const getMockResponse = (tab: string): ApiResponse => {
-  if (tab === 'raised-by-us') {
-    return {
-      "disputes": [
-        {
-          "dispute_id": "3252357872",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "icici",
-          "reason": "Mismatch in KYC details",
-          "status": "PENDING",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "High",
-          "identities": [
-            {
-              "identifier_id": "BFYXXX78R",
-              "identity_type": "PAN",
-              "reason": "Identifier falsely marked as fraud"
-            },
-            {
-              "identifier_id": "98546549135",
-              "identity_type": "MOBILE",
-              "reason": "Supporting documents missing"
-            }
-          ]
-        },
-        {
-          "dispute_id": "7836451209",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "axis",
-          "reason": "Mismatch in KYC details",
-          "status": "RESOLVED",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "Medium",
-          "identities": [
-            {
-              "identifier_id": "CXYPQ1234M",
-              "identity_type": "PAN",
-              "reason": "False positive detection"
-            }
-          ]
-        },
-        {
-          "dispute_id": "9087123456",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "sbi",
-          "reason": "Mismatch in KYC details",
-          "status": "REJECTED",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "Low",
-          "identities": [
-            {
-              "identifier_id": "91234567890",
-              "identity_type": "MOBILE",
-              "reason": "Fraudulent activity detected"
-            }
-          ]
-        },
-        {
-          "dispute_id": "5647382910",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "kotak",
-          "reason": "Mismatch in KYC details",
-          "status": "INFO_REQUESTED",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "High",
-          "identities": [
-            {
-              "identifier_id": "ABCDE5678F",
-              "identity_type": "PAN", 
-              "reason": "Identity verification failed"
-            },
-            {
-              "identifier_id": "user@email.com",
-              "identity_type": "EMAIL",
-              "reason": "Email address flagged"
-            }
-          ]
-        },
-        {
-          "dispute_id": "2198765432",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "icici",
-          "reason": "Multiple linked accounts detected",
-          "status": "PENDING",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "Medium",
-          "identities": [
-            {
-              "identifier_id": "FGHIJ9012K",
-              "identity_type": "PAN",
-              "reason": "Linked to multiple accounts"
-            }
-          ]
-        },
-        {
-          "dispute_id": "6543217890",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "axis",
-          "reason": "Multiple linked accounts detected",
-          "status": "RESOLVED",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "Low",
-          "identities": [
-            {
-              "identifier_id": "87654321098",
-              "identity_type": "MOBILE",
-              "reason": "Account linking issue"
-            }
-          ]
-        },
-        {
-          "dispute_id": "8901234567",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "sbi",
-          "reason": "Multiple linked accounts detected",
-          "status": "INFO_REQUESTED",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "Medium",
-          "identities": [
-            {
-              "identifier_id": "LMNOP3456Q",
-              "identity_type": "PAN",
-              "reason": "Duplicate account creation"
-            }
-          ]
-        },
-        {
-          "dispute_id": "4567890123",
-          "raised_by_party_id": "hdfc",
-          "raised_against_party_id": "kotak",
-          "reason": "Multiple linked accounts detected",
-          "status": "REJECTED",
-          "raised_at": "2025-06-26 12:29:55.706957",
-          "priority": "High",
-          "identities": [
-            {
-              "identifier_id": "admin@bank.com",
-              "identity_type": "EMAIL",
-              "reason": "Administrative error"
-            }
-          ]
-        }
-      ],
-      "total_count": 8
+// Central Negative Registry - Demo data
+const CENTRAL_NEGATIVE_REGISTRY: NegativeRegistryEntry[] = [
+  // ICICI flagged identifiers (will be disputed by HDFC)
+  { identifier_type: 'PAN', identifier_id: 'BFYXXX78R', initial_flag_by: 'icici' },
+  { identifier_type: 'MOBILE', identifier_id: '98546549135', initial_flag_by: 'icici' },
+  { identifier_type: 'PAN', identifier_id: 'FGHIJ9012K', initial_flag_by: 'icici' },
+  { identifier_type: 'UPI_ID', identifier_id: 'test@icici', initial_flag_by: 'icici' },
+  { identifier_type: 'ACCOUNT_NUMBER', identifier_id: '1234567890123', initial_flag_by: 'icici' },
+  { identifier_type: 'PAN', identifier_id: 'AFYXXX78R', initial_flag_by: 'icici' },
+  { identifier_type: 'MOBILE', identifier_id: '67546549135', initial_flag_by: 'icici' },
+  { identifier_type: 'PAN', identifier_id: 'IOHIJ9012K', initial_flag_by: 'icici' },
+  { identifier_type: 'UPI_ID', identifier_id: 'tnob@icici', initial_flag_by: 'icici' },
+  { identifier_type: 'ACCOUNT_NUMBER', identifier_id: '4762567890123', initial_flag_by: 'icici' },
+  { identifier_type: 'PAN', identifier_id: 'JHYXXX78R', initial_flag_by: 'icici' },
+  { identifier_type: 'MOBILE', identifier_id: '98546549135', initial_flag_by: 'icici' },
+  { identifier_type: 'PAN', identifier_id: 'FGHIJ9012K', initial_flag_by: 'icici' },
+  { identifier_type: 'UPI_ID', identifier_id: 'test@icici', initial_flag_by: 'icici' },
+  { identifier_type: 'ACCOUNT_NUMBER', identifier_id: '1234567890123', initial_flag_by: 'icici' },
+  
+  // HDFC flagged identifiers (will be disputed by ICICI)
+  { identifier_type: 'PAN', identifier_id: 'HDFC1234X', initial_flag_by: 'hdfc' },
+  { identifier_type: 'MOBILE', identifier_id: '87654321098', initial_flag_by: 'hdfc' },
+  { identifier_type: 'UPI_ID', identifier_id: 'demo@hdfc', initial_flag_by: 'hdfc' },
+  
+  // Other banks for variety
+  { identifier_type: 'PAN', identifier_id: 'CXYPQ1234M', initial_flag_by: 'axis' },
+  { identifier_type: 'MOBILE', identifier_id: '91234567890', initial_flag_by: 'sbi' },
+  { identifier_type: 'PAN', identifier_id: 'ABCDE5678F', initial_flag_by: 'kotak' },
+  { identifier_type: 'PAN', identifier_id: 'LMNOP3456Q', initial_flag_by: 'sbi' },
+];
+
+// LocalStorage keys
+const STORAGE_KEYS = {
+  DISPUTES: 'fraud_disputes',
+  NEGATIVE_REGISTRY: 'negative_registry',
+  DISPUTE_COUNTER: 'dispute_counter'
+};
+
+// Initialize localStorage with demo data
+const initializeLocalStorage = () => {
+  if (!localStorage.getItem(STORAGE_KEYS.NEGATIVE_REGISTRY)) {
+    localStorage.setItem(STORAGE_KEYS.NEGATIVE_REGISTRY, JSON.stringify(CENTRAL_NEGATIVE_REGISTRY));
+  }
+  
+  if (!localStorage.getItem(STORAGE_KEYS.DISPUTES)) {
+    localStorage.setItem(STORAGE_KEYS.DISPUTES, JSON.stringify([]));
+  }
+  
+  if (!localStorage.getItem(STORAGE_KEYS.DISPUTE_COUNTER)) {
+    localStorage.setItem(STORAGE_KEYS.DISPUTE_COUNTER, '1000000000');
+  }
+};
+
+// Helper function to generate dispute ID
+const generateDisputeId = (): string => {
+  const counter = parseInt(localStorage.getItem(STORAGE_KEYS.DISPUTE_COUNTER) || '1000000000');
+  const newCounter = counter + 1;
+  localStorage.setItem(STORAGE_KEYS.DISPUTE_COUNTER, newCounter.toString());
+  return newCounter.toString();
+};
+
+// Helper function to get disputes from localStorage
+const getStoredDisputes = (): ApiDispute[] => {
+  const disputes = localStorage.getItem(STORAGE_KEYS.DISPUTES);
+  return disputes ? JSON.parse(disputes) : [];
+};
+
+// Helper function to save disputes to localStorage
+const saveDisputes = (disputes: ApiDispute[]) => {
+  localStorage.setItem(STORAGE_KEYS.DISPUTES, JSON.stringify(disputes));
+  
+  // Trigger storage event for cross-tab communication
+  window.dispatchEvent(new StorageEvent('storage', {
+    key: STORAGE_KEYS.DISPUTES,
+    newValue: JSON.stringify(disputes),
+    storageArea: localStorage
+  }));
+};
+
+// Helper function to find which parties should receive the dispute
+const findTargetParties = (identifiers: ApiIdentifier[]): string[] => {
+  const registry: NegativeRegistryEntry[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.NEGATIVE_REGISTRY) || '[]'
+  );
+  
+  const targetParties = new Set<string>();
+  
+  identifiers.forEach(identifier => {
+    const registryEntry = registry.find(entry => 
+      entry.identifier_id === identifier.identifier_id && 
+      entry.identifier_type === identifier.identity_type
+    );
+    
+    if (registryEntry) {
+      targetParties.add(registryEntry.initial_flag_by);
+    }
+  });
+  
+  return Array.from(targetParties);
+};
+
+// Mock API: Create Dispute
+export const mockCreateDispute = (disputeData: {
+  raised_by_party_id: string;
+  identifier: ApiIdentifier[];
+}) => {
+  initializeLocalStorage();
+  
+  const disputes = getStoredDisputes();
+  const targetParties = findTargetParties(disputeData.identifier);
+  
+  // Create disputes for each target party
+  targetParties.forEach(targetParty => {
+    const newDispute: ApiDispute = {
+      dispute_id: generateDisputeId(),
+      raised_by_party_id: disputeData.raised_by_party_id,
+      raised_against_party_id: targetParty,
+      reason: disputeData.identifier.map(id => id.reason).join(', '),
+      status: 'PENDING',
+      raised_at: new Date().toISOString(),
+      priority: 'Medium',
+      identities: disputeData.identifier
     };
-  } else {
-    return {
-      "disputes": [
-        {
-          "dispute_id": "1234567890",
-          "raised_by_party_id": "party_001",
-          "raised_against_party_id": "merchant_123",
-          "reason": "Suspicious transaction pattern",
-          "status": "RESOLVED",
-          "raised_at": "2025-06-26 10:03:43.127213",
-          "priority": "High",
-          "identities": [
-            {
-              "identifier_id": "STUVW7890X",
-              "identity_type": "PAN",
-              "reason": "Transaction pattern anomaly"
-            }
-          ]
-        },
-        {
-          "dispute_id": "9876543210",
-          "raised_by_party_id": "party_002",
-          "raised_against_party_id": "merchant_123",
-          "reason": "Failed to deliver goods",
-          "status": "INFO_REQUESTED",
-          "raised_at": "2025-06-26 10:03:43.127213",
-          "priority": "Medium",
-          "identities": [
-            {
-              "identifier_id": "76543210987",
-              "identity_type": "MOBILE",
-              "reason": "Delivery verification issue"
-            }
-          ]
-        }
-      ],
-      "total_count": 2
+    
+    disputes.push(newDispute);
+  });
+  
+  saveDisputes(disputes);
+  
+  return { success: true, message: 'Dispute created successfully' };
+};
+
+// Mock API: Get Disputes (Raised by us)
+export const mockGetDisputes = (partyId: string): ApiResponse => {
+  initializeLocalStorage();
+  
+  const disputes = getStoredDisputes();
+  const filteredDisputes = disputes.filter(dispute => 
+    dispute.raised_by_party_id === partyId
+  );
+  
+  return {
+    disputes: filteredDisputes,
+    total_count: filteredDisputes.length
+  };
+};
+
+// Mock API: Get Assigned Disputes (Raised against us)
+export const mockGetAssignedDisputes = (partyId: string): ApiResponse => {
+  initializeLocalStorage();
+  
+  const disputes = getStoredDisputes();
+  const filteredDisputes = disputes.filter(dispute => 
+    dispute.raised_against_party_id === partyId
+  );
+  
+  return {
+    disputes: filteredDisputes,
+    total_count: filteredDisputes.length
+  };
+};
+
+// Mock API: Update Dispute Status
+export const mockUpdateDisputeStatus = (disputeId: string, updateData: {
+  party_id: string;
+  status: string;
+  resolution_comments: string;
+}) => {
+  initializeLocalStorage();
+  
+  const disputes = getStoredDisputes();
+  const disputeIndex = disputes.findIndex(dispute => dispute.dispute_id === disputeId);
+  
+  if (disputeIndex !== -1) {
+    disputes[disputeIndex].status = updateData.status;
+    disputes[disputeIndex].reason = updateData.resolution_comments;
+    disputes[disputeIndex].resolution_comments = updateData.resolution_comments;
+    
+    saveDisputes(disputes);
+    
+    return { 
+      success: true, 
+      message: 'Dispute updated successfully',
+      reason: updateData.resolution_comments
     };
   }
+  
+  return { success: false, message: 'Dispute not found' };
+};
+
+// Storage event listener setup for real-time updates
+export const setupStorageListener = (callback: () => void) => {
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEYS.DISPUTES) {
+      callback();
+    }
+  };
+  
+  window.addEventListener('storage', handleStorageChange);
+  
+  return () => {
+    window.removeEventListener('storage', handleStorageChange);
+  };
+};
+
+// Legacy function for backward compatibility (returns empty data when localStorage is empty)
+export const getMockResponse = (tab: string): ApiResponse => {
+  if (!MOCK_MODE) {
+    return { disputes: [], total_count: 0 };
+  }
+  
+  initializeLocalStorage();
+  
+  // Return empty data since we'll use the new mock API functions
+  return { disputes: [], total_count: 0 };
 }; 

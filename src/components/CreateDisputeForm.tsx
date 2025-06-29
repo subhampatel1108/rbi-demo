@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
 import { API_CONFIG, API_ENDPOINTS } from '@/constants';
+import { MOCK_MODE, mockCreateDispute } from '@/utils/mockData';
 
 interface IdentifierObject {
   identifier_id: string;
@@ -120,34 +121,60 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
         identifier: identifiers,
       };
 
-      const response = await fetch(`${API_CONFIG.HOSTNAME}${API_ENDPOINTS.CREATE_DISPUTE}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        toast({
-          title: "Success",
-          description: "Dispute created successfully",
-          variant: "info"
-        });
+      if (MOCK_MODE) {
+        // Use mock API
+        const result = mockCreateDispute(requestBody);
         
-        // Close modal and trigger force update
-        onCancel(); // Close the modal
-        if (onSuccess) {
-          onSuccess(); // Trigger force update of fetchDisputes
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: "Dispute created successfully",
+            variant: "info"
+          });
+          
+          // Close modal and trigger force update
+          onCancel();
+          if (onSuccess) {
+            onSuccess();
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to create dispute",
+            variant: "destructive"
+          });
         }
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        toast({
-          title: "Error",
-          description: errorData.message || "Failed to create dispute",
-          variant: "destructive"
+        // Real API call
+        const response = await fetch(`${API_CONFIG.HOSTNAME}${API_ENDPOINTS.CREATE_DISPUTE}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
         });
+
+        if (response.ok) {
+          const result = await response.json();
+          toast({
+            title: "Success",
+            description: "Dispute created successfully",
+            variant: "info"
+          });
+          
+          // Close modal and trigger force update
+          onCancel();
+          if (onSuccess) {
+            onSuccess();
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          toast({
+            title: "Error",
+            description: errorData.message || "Failed to create dispute",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.error('Error creating dispute:', error);

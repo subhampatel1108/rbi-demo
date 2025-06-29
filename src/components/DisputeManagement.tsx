@@ -7,7 +7,16 @@ import CreateDisputeForm from '@/components/CreateDisputeForm';
 import DisputeList from '@/components/DisputeList';
 import DisputeDetails from '@/components/DisputeDetails';
 import TableSkeleton from '@/components/ui/TableSkeleton';
-import { MOCK_MODE, getMockResponse, ApiDispute, ApiResponse, ApiIdentifier } from '@/utils/mockData';
+import { 
+  MOCK_MODE, 
+  getMockResponse, 
+  ApiDispute, 
+  ApiResponse, 
+  ApiIdentifier,
+  mockGetDisputes,
+  mockGetAssignedDisputes,
+  setupStorageListener
+} from '@/utils/mockData';
 import { API_CONFIG, API_ENDPOINTS } from '@/constants';
 
 export interface Identifier {
@@ -40,6 +49,7 @@ const DisputeManagement = () => {
   const [newlyCreatedDisputes, setNewlyCreatedDisputes] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const storageListenerRef = useRef<(() => void) | null>(null);
   const [showUpdateIndicator, setShowUpdateIndicator] = useState(false);
 
   // Subtle update indicator component
@@ -58,7 +68,7 @@ const DisputeManagement = () => {
     setShowUpdateIndicator(true);
     setTimeout(() => {
       setShowUpdateIndicator(false);
-    }, 2000); // Show for 2 seconds instead of 1
+    }, 2000);
   };
 
   const getToastStyle = (domain: string) => {
@@ -68,7 +78,7 @@ const DisputeManagement = () => {
       case 'icici':
         return 'border-[#F8C6C7] bg-[#F8C6C7] text-red-900';
       default:
-        return 'border-blue-200 bg-blue-50 text-blue-900'; // Default info style
+        return 'border-blue-200 bg-blue-50 text-blue-900';
     }
   };
 
@@ -96,16 +106,12 @@ const DisputeManagement = () => {
     const emailDomain = extractDomain(email);
     if (!emailDomain) return;
     
-    // Cancel any previous pending request
-    if (abortControllerRef.current) {
+    // Cancel any previous pending request (only for real API calls)
+    if (!MOCK_MODE && abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     
-    // Create new AbortController for this request
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-    
-    if(forceUpdate) {
+    if (forceUpdate) {
       setLoading(true);
     }
     
@@ -113,22 +119,17 @@ const DisputeManagement = () => {
       let data: ApiResponse;
       
       if (MOCK_MODE) {
-        // Simulate API delay
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(resolve, 300);
-          abortController.signal.addEventListener('abort', () => {
-            clearTimeout(timeout);
-            reject(new DOMException('Request aborted', 'AbortError'));
-          });
-        });
-        
-        // Check if request was aborted before proceeding
-        if (abortController.signal.aborted) {
-          throw new DOMException('Request aborted', 'AbortError');
+        // Use new localStorage-based mock system
+        if (activeTab === 'raised-against-us') {
+          data = mockGetAssignedDisputes(emailDomain);
+        } else {
+          data = mockGetDisputes(emailDomain);
         }
-        
-        data = getMockResponse(activeTab);
       } else {
+        // Real API calls
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+        
         const baseUrl = activeTab === 'raised-against-us' 
           ? `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_ASSIGNED_DISPUTES}?party_id=${emailDomain}`
           : `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_DISPUTES}?party_id=${emailDomain}`;
@@ -143,11 +144,11 @@ const DisputeManagement = () => {
           console.error('Failed to fetch disputes:', response.statusText);
           return;
         }
-      }
-
-      // Check if this request is still the current one (not aborted by a newer request)
-      if (abortController.signal.aborted || abortControllerRef.current !== abortController) {
-        return; // Ignore this response as it's outdated
+        
+        // Check if this request is still the current one
+        if (abortController.signal.aborted || abortControllerRef.current !== abortController) {
+          return;
+        }
       }
 
       const convertedDisputes = data.disputes.map(convertApiDisputeToDispute);
@@ -188,18 +189,15 @@ const DisputeManagement = () => {
         console.error('Error fetching disputes:', error);
       }
     } finally {
-      // Only set loading to false if this is still the current request
-      if (abortControllerRef.current === abortController) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
   const handleTabChange = (newTab: 'raised-by-us' | 'raised-against-us') => {
-    if (newTab === activeTab) return; // Don't do anything if same tab
+    if (newTab === activeTab) return;
     
-    // Clear current interval
-    if (intervalRef.current) {
+    // Clear current interval (only for real API polling)
+    if (!MOCK_MODE && intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     
@@ -212,10 +210,16 @@ const DisputeManagement = () => {
     const emailDomain = extractDomain(email);
     if (!emailDomain) return;
 
-    // Clear any existing interval and abort any pending request
+    // Clean up previous listeners and intervals
+    if (storageListenerRef.current) {
+      storageListenerRef.current();
+      storageListenerRef.current = null;
+    }
+    
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
+    
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -223,11 +227,21 @@ const DisputeManagement = () => {
     // Initial fetch with force update
     fetchDisputes(true);
 
-    // Set up polling every 6 seconds
-    intervalRef.current = setInterval(() => fetchDisputes(false), 6000);
+    if (MOCK_MODE) {
+      // Set up localStorage listener for real-time updates
+      storageListenerRef.current = setupStorageListener(() => {
+        fetchDisputes(false);
+      });
+    } else {
+      // Set up polling every 6 seconds for real API
+      intervalRef.current = setInterval(() => fetchDisputes(false), 6000);
+    }
 
-    // Cleanup interval and abort any pending request on unmount or dependency change
+    // Cleanup on unmount or dependency change
     return () => {
+      if (storageListenerRef.current) {
+        storageListenerRef.current();
+      }
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }

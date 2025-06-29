@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
 import { API_CONFIG, API_ENDPOINTS } from '@/constants';
+import { MOCK_MODE, mockUpdateDisputeStatus } from '@/utils/mockData';
 
 interface DisputeDetailsProps {
   dispute: Dispute;
@@ -110,48 +111,87 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         resolution_comments: feedback.trim()
       };
 
-      const response = await fetch(`${API_CONFIG.HOSTNAME}/disputes/${dispute.disputeId}/status`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
+      if (MOCK_MODE) {
+        // Use mock API
+        const result = mockUpdateDisputeStatus(dispute.disputeId, requestBody);
         
-        // Show immediate success notification
-        toast({
-          title: "Success",
-          description: `Dispute ${selectedAction === 'resolve' ? 'resolved' : 'rejected'} successfully`,
-          variant: "info"
-        });
-        
-        // If API returns a reason, use it for the banner
-        const newStatus = selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED';
-        const reason = result.reason || feedback.trim();
-        
-        // Update banner with new status
-        setStatusBanner({
-          show: true,
-          status: newStatus as 'RESOLVED' | 'REJECTED',
-          reason: reason,
-        });
-        
-        setIsActionModalOpen(false);
-        setFeedback('');
-        
-        if (onActionComplete) {
-          onActionComplete(); // Trigger force update
+        if (result.success) {
+          // Show immediate success notification
+          toast({
+            title: "Success",
+            description: `Dispute ${selectedAction === 'resolve' ? 'resolved' : 'rejected'} successfully`,
+            variant: "info"
+          });
+          
+          // If API returns a reason, use it for the banner
+          const newStatus = selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED';
+          const reason = result.reason || feedback.trim();
+          
+          // Update banner with new status
+          setStatusBanner({
+            show: true,
+            status: newStatus as 'RESOLVED' | 'REJECTED',
+            reason: reason,
+          });
+          
+          setIsActionModalOpen(false);
+          setFeedback('');
+          
+          if (onActionComplete) {
+            onActionComplete(); // Trigger force update
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to update dispute",
+            variant: "destructive"
+          });
         }
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        toast({
-          title: "Error",
-          description: errorData.message || "Failed to update dispute",
-          variant: "destructive"
+        // Real API call
+        const response = await fetch(`${API_CONFIG.HOSTNAME}/disputes/${dispute.disputeId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
         });
+
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Show immediate success notification
+          toast({
+            title: "Success",
+            description: `Dispute ${selectedAction === 'resolve' ? 'resolved' : 'rejected'} successfully`,
+            variant: "info"
+          });
+          
+          // If API returns a reason, use it for the banner
+          const newStatus = selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED';
+          const reason = result.reason || feedback.trim();
+          
+          // Update banner with new status
+          setStatusBanner({
+            show: true,
+            status: newStatus as 'RESOLVED' | 'REJECTED',
+            reason: reason,
+          });
+          
+          setIsActionModalOpen(false);
+          setFeedback('');
+          
+          if (onActionComplete) {
+            onActionComplete(); // Trigger force update
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          toast({
+            title: "Error",
+            description: errorData.message || "Failed to update dispute",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.error('Error updating dispute:', error);
