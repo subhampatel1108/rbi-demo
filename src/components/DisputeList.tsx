@@ -92,6 +92,22 @@ const disputeEqual = (prevProps: DisputeRowProps, nextProps: DisputeRowProps) =>
 
 // Memoized row component with custom comparison
 const DisputeRow = React.memo(({ dispute, onViewDispute, isNewlyCreated }: DisputeRowProps) => {
+  const reasonRef = React.useRef<HTMLDivElement>(null);
+  const [isTruncated, setIsTruncated] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkTruncation = () => {
+      if (reasonRef.current) {
+        const isTruncatedNow = reasonRef.current.scrollWidth > reasonRef.current.clientWidth;
+        setIsTruncated(isTruncatedNow);
+      }
+    };
+    
+    checkTruncation();
+    window.addEventListener('resize', checkTruncation);
+    
+    return () => window.removeEventListener('resize', checkTruncation);
+  }, [dispute.reason]);
   
   return (
     <TableRow 
@@ -111,16 +127,22 @@ const DisputeRow = React.memo(({ dispute, onViewDispute, isNewlyCreated }: Dispu
         </div>
       </TableCell>
       <TableCell className="max-w-16">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="truncate">
-              {dispute.reason}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="max-w-xs">{dispute.reason}</p>
-          </TooltipContent>
-        </Tooltip>
+        {isTruncated ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div ref={reasonRef} className="truncate">
+                {dispute.reason}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-xs">{dispute.reason}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <div ref={reasonRef} className="truncate">
+            {dispute.reason}
+          </div>
+        )}
       </TableCell>
       <TableCell>
                   <Badge 
