@@ -480,24 +480,44 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                     {/* Timeline dot */}
                     <div className="flex flex-col items-center relative z-10">
                       <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
-                        event.status === 'pending' 
-                          ? 'bg-gray-300' 
-                          : (index === timelineEvents.length - 1 && dispute.status === 'REJECTED')
-                          ? 'bg-red-500'
-                          : 'bg-blue-500'
+                        // For PENDING: only first 2 milestones highlighted
+                        // For RESOLVED/REJECTED: all milestones highlighted
+                        dispute.status === 'PENDING' 
+                          ? (index < 2 ? 'bg-blue-500' : 'bg-gray-300')
+                          : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                          ? (index === timelineEvents.length - 1 && dispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
+                          : (index < 2 ? 'bg-blue-500' : 'bg-gray-300') // Default case
                       }`}></div>
                     </div>
                     
                     {/* Timeline content */}
                     <div className="flex-1 pb-8">
                       <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                        <h4 className={`text-sm font-medium ${
+                          dispute.status === 'PENDING' 
+                            ? (index < 2 ? 'text-gray-900' : 'text-gray-400')
+                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                            ? 'text-gray-900'
+                            : (index < 2 ? 'text-gray-900' : 'text-gray-400')
+                        }`}>{event.title}</h4>
                         {event.time && (
-                          <span className="text-xs text-gray-500 ml-2">{event.time}</span>
+                          <span className={`text-xs ml-2 ${
+                            dispute.status === 'PENDING' 
+                              ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                              ? 'text-gray-500'
+                              : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                          }`}>{event.time}</span>
                         )}
                       </div>
                       {event.description && (
-                        <p className="text-xs text-gray-500 whitespace-pre-line">{event.description}</p>
+                        <p className={`text-xs whitespace-pre-line ${
+                          dispute.status === 'PENDING' 
+                            ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                            ? 'text-gray-500'
+                            : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                        }`}>{event.description}</p>
                       )}
                     </div>
                   </div>
@@ -701,24 +721,44 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   {/* Timeline dot */}
                   <div className="flex flex-col items-center relative z-10">
                     <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
-                      event.status === 'pending' 
-                        ? 'bg-gray-300' 
-                        : (index === timelineEvents.length - 1 && dispute.status === 'REJECTED')
-                        ? 'bg-red-500'
-                        : 'bg-blue-500'
+                      // For PENDING: only first 2 milestones highlighted
+                      // For RESOLVED/REJECTED: all milestones highlighted
+                      dispute.status === 'PENDING' 
+                        ? (index < 2 ? 'bg-blue-500' : 'bg-gray-300')
+                        : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                        ? (index === timelineEvents.length - 1 && dispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
+                        : (index < 2 ? 'bg-blue-500' : 'bg-gray-300') // Default case
                     }`}></div>
                   </div>
                   
                   {/* Timeline content */}
                   <div className="flex-1 pb-8">
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                      <h4 className={`text-sm font-medium ${
+                        dispute.status === 'PENDING' 
+                          ? (index < 2 ? 'text-gray-900' : 'text-gray-400')
+                          : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                          ? 'text-gray-900'
+                          : (index < 2 ? 'text-gray-900' : 'text-gray-400')
+                      }`}>{event.title}</h4>
                       {event.time && (
-                        <span className="text-xs text-gray-500 ml-2">{event.time}</span>
+                        <span className={`text-xs ml-2 ${
+                          dispute.status === 'PENDING' 
+                            ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                            ? 'text-gray-500'
+                            : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                        }`}>{event.time}</span>
                       )}
                     </div>
                     {event.description && (
-                      <p className="text-xs text-gray-500 whitespace-pre-line">{event.description}</p>
+                      <p className={`text-xs whitespace-pre-line ${
+                        dispute.status === 'PENDING' 
+                          ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                          : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                          ? 'text-gray-500'
+                          : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                      }`}>{event.description}</p>
                     )}
                   </div>
                 </div>

@@ -50,6 +50,12 @@ const CENTRAL_NEGATIVE_REGISTRY: NegativeRegistryEntry[] = [
   { identifier_type: 'PAN', identifier_id: 'FGHIJ9012K', initial_flag_by: 'icici' },
   { identifier_type: 'UPI_ID', identifier_id: 'test@icici', initial_flag_by: 'icici' },
   { identifier_type: 'ACCOUNT_NUMBER', identifier_id: '1234567890123', initial_flag_by: 'icici' },
+  // add a few more random icici entries
+  { identifier_type: 'PAN', identifier_id: 'KHYXXX78R', initial_flag_by: 'icici' },
+  { identifier_type: 'MOBILE', identifier_id: '78146549135', initial_flag_by: 'icici' },
+  { identifier_type: 'PAN', identifier_id: 'KLJIJ9012K', initial_flag_by: 'icici' },
+  { identifier_type: 'UPI_ID', identifier_id: 'test4@icici', initial_flag_by: 'icici' },
+  { identifier_type: 'ACCOUNT_NUMBER', identifier_id: '4331567890123', initial_flag_by: 'icici' },
   
   // HDFC flagged identifiers (will be disputed by ICICI)
   { identifier_type: 'PAN', identifier_id: 'HDFC1234X', initial_flag_by: 'hdfc' },
