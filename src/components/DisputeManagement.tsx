@@ -152,6 +152,9 @@ const DisputeManagement = () => {
 
       const convertedDisputes = data.disputes.map(convertApiDisputeToDispute);
       
+      // Sort disputes by dispute ID to prevent UI jumping from erratic backend order
+      convertedDisputes.sort((a, b) => a.disputeId.localeCompare(b.disputeId));
+      
       // Always update on force update (tab switch) or if data actually changed
       if (forceUpdate) {
         setDisputes(convertedDisputes);

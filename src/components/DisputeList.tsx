@@ -160,10 +160,10 @@ const DisputeList = ({ disputes, onViewDispute, newlyCreatedDisputes }: DisputeL
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Dispute ID</TableHead>
-              <TableHead>Reason</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead>DISPUTE ID</TableHead>
+              <TableHead>REASON</TableHead>
+              <TableHead>STATUS</TableHead>
+              <TableHead>CREATED</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

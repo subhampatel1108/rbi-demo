@@ -347,11 +347,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   <div className="flex space-x-4">
                     <Button variant="outline" size="sm" className="flex items-center space-x-2">
                       <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                      <span>RAJESH MK.pdf</span>
+                      <span className="text-xs">RAJESH MK.pdf</span>
                     </Button>
                     <Button variant="outline" size="sm" className="flex items-center space-x-2">
                       <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                      <span>RAJESH MK.pdf</span>
+                      <span className="text-xs">RAJESH MK.pdf</span>
                     </Button>
                   </div>
                 </div>
@@ -374,7 +374,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                            identifier.identity_type === 'EMAIL' ? 'Email address' :
                            identifier.identity_type}
                         </span>
-                        <span className="text-gray-900 font-medium font-mono">{identifier.identifier_id}</span>
+                        <span className="text-gray-900 font-medium">{identifier.identifier_id}</span>
                       </div>
 
                       {/* Reason */}
@@ -568,11 +568,11 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div className="flex space-x-4">
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
                     <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                    <span>RAJESH MK.pdf</span>
+                    <span className="text-xs">RAJESH MK.pdf</span>
                   </Button>
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
                     <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                    <span>RAJESH MK.pdf</span>
+                    <span className="text-xs">RAJESH MK.pdf</span>
                   </Button>
                 </div>
               </div>
@@ -595,7 +595,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                          identifier.identity_type === 'EMAIL' ? 'Email address' :
                          identifier.identity_type}
                       </span>
-                      <span className="text-gray-900 font-medium font-mono">{identifier.identifier_id}</span>
+                      <span className="text-gray-900 font-medium">{identifier.identifier_id}</span>
                     </div>
 
                     {/* Reason */}

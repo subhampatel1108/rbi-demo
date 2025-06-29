@@ -235,26 +235,31 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             </div>
           ))}
 
-          <div className="flex justify-start">
+          <div className="flex justify-center">
             <Button
               type="button"
               onClick={addIdentifier}
-              className="w-64 flex items-center justify-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
+              variant="outline"
+              className="font-medium border border-gray-200 rounded-md"
             >
-              <Plus className="h-4 w-4" />
-              <span>Add Another Identifier</span>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Identifier
             </Button>
           </div>
 
-          <div className="flex justify-start">
-            <Button
-              type="button"
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">Add attachments</h4>
+            
+            <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-64 flex items-center justify-center space-x-2 bg-white border border-gray-200 text-blue-600 hover:bg-gray-50 hover:text-blue-700"
+              className="border-2 border-dashed border-gray-300 rounded-lg h-14 text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center"
             >
-              <Paperclip className="h-4 w-4" />
-              <span>Attach PDF</span>
-            </Button>
+              <div className="flex items-center space-x-2">
+                <Paperclip className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-500 font-medium">Upload Document</span>
+              </div>
+            </div>
+            
             <input
               ref={fileInputRef}
               type="file"
