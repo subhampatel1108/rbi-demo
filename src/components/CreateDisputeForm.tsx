@@ -234,7 +234,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Customer Identifier</Label>
+                  <Label>Customer Identifier <span className="text-red-500">*</span></Label>
                   <div className="flex">
                     <Select 
                       value={identifier.identity_type} 
@@ -262,7 +262,7 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>Description <span className="text-red-500">*</span></Label>
                   <Textarea
                     value={identifier.reason}
                     onChange={(e) => updateIdentifier(index, 'reason', e.target.value)}

@@ -87,13 +87,13 @@ const initializeLocalStorage = () => {
   }
   
   if (!localStorage.getItem(STORAGE_KEYS.DISPUTE_COUNTER)) {
-    localStorage.setItem(STORAGE_KEYS.DISPUTE_COUNTER, '1000000000');
+    localStorage.setItem(STORAGE_KEYS.DISPUTE_COUNTER, '1174635902');
   }
 };
 
 // Helper function to generate dispute ID
 const generateDisputeId = (): string => {
-  const counter = parseInt(localStorage.getItem(STORAGE_KEYS.DISPUTE_COUNTER) || '1000000000');
+  const counter = parseInt(localStorage.getItem(STORAGE_KEYS.DISPUTE_COUNTER) || '1174635902');
   const newCounter = counter + 1;
   localStorage.setItem(STORAGE_KEYS.DISPUTE_COUNTER, newCounter.toString());
   return newCounter.toString();
