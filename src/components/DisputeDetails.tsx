@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowLeft, FileText, ChevronUp, Menu, X, Check, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -263,6 +264,12 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
     });
   };
 
+  // Utility function to truncate text
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   const timelineEvents = [
     {
       title: "Dispute Raised",
@@ -318,9 +325,288 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
   // Layout for "Disputes Raised Against Us"
   if (activeTab === 'raised-against-us') {
     return (
+      <TooltipProvider>
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Header with back button and action buttons */}
+          <div className="flex items-center justify-between mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={onBack} 
+              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200"
+            >
+              <ArrowLeft className="h-6 w-6" /> Back
+            </Button>
+            {dispute.status !== 'RESOLVED' && dispute.status !== 'REJECTED' && (
+              <div className="flex space-x-3">
+                <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleActionClick('reject')}>
+                  <X className="h-4 w-4" />
+                  <span>Reject</span>
+                </Button>
+                <Button className="flex items-center space-x-2 bg-black text-white hover:bg-gray-800" onClick={() => handleActionClick('resolve')}>
+                  <Check className="h-4 w-4" />
+                  <span>Resolve</span>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Status Banner */}
+          <StatusBanner />
+
+          {/* Dispute ID and Status */}
+          <div className="space-y-2 mb-8">
+            <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
+            <div className="flex items-center space-x-4">
+              <h2 className="text-2xl font-bold text-gray-900">{dispute.disputeId}</h2>
+              <div className="flex items-center gap-2">
+                <Badge 
+                  className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                  noHover
+                >
+                  {dispute.status}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-[80px]">
+            {/* Left Column - Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Dispute Details Section */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900">Dispute Details</h3>
+                
+                <div className="space-y-6">
+                  {/* Opened on */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Opened on</span>
+                    <span className="text-gray-900 font-medium">{formatDate(dispute.createdAt)}</span>
+                  </div>
+
+                  {/* Criticality */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Criticality</span>
+                    {getPriorityIcon(dispute.priority)}
+                  </div>
+
+                  {/* Attachments */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Attachments</span>
+                    <div className="flex space-x-4">
+                      <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}>
+                        <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
+                        <span 
+                          className="text-xs cursor-pointer hover:text-blue-600"
+                          onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}
+                        >
+                          RAJESH MK.pdf
+                        </span>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}>
+                        <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
+                        <span 
+                          className="text-xs cursor-pointer hover:text-blue-600"
+                          onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}
+                        >
+                          RAJESH MK.pdf
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Identity Details Section */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900">Identity Details</h3>
+                
+                <div className="space-y-6">
+                  {dispute.identities && dispute.identities.length > 0 ? (
+                    dispute.identities.map((identifier, index) => (
+                      <div key={index} className="space-y-4">
+                        {/* Identity Type and ID */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">
+                            {identifier.identity_type === 'PAN' ? 'Pan Number' : 
+                             identifier.identity_type === 'MOBILE' ? 'Phone number' :
+                             identifier.identity_type === 'EMAIL' ? 'Email address' :
+                             identifier.identity_type}
+                          </span>
+                          <span className="text-gray-900 font-medium max-w-[200px] truncate">{identifier.identifier_id}</span>
+                        </div>
+
+                        {/* Reason */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Reason</span>
+                          <div className="flex items-center space-x-2 max-w-[200px]">
+                            {identifier.reason.length > 50 ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="text-gray-900 font-medium truncate">
+                                    {truncateText(identifier.reason)}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{identifier.reason}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-gray-900 font-medium">{identifier.reason}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Add separator between identifiers except for the last one */}
+                        {index < dispute.identities.length - 1 && (
+                          <hr className="border-gray-200" />
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-500 text-sm">No identity details available</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Timeline */}
+            <div className="lg:col-span-1">
+              <div className="relative">
+                {/* Base vertical line */}
+                <div 
+                  className="absolute left-[6px] top-[6px] w-px bg-blue-200"
+                  style={{
+                    height: `${(timelineEvents.length - 1) * 99 + 6}px` // Stops at last timeline dot
+                  }}
+                ></div>
+                
+                {/* Progress line - shows actual completion */}
+                <div 
+                  className="absolute left-[6px] top-[6px] w-px bg-blue-500 transition-all duration-500"
+                  style={{
+                    height: dispute.status === 'PENDING' 
+                      ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
+                      : dispute.status === 'RESOLVED'
+                      ? `${(timelineEvents.length - 1) * 99 + 6}px` // Covers all steps for resolved
+                      : dispute.status === 'REJECTED'
+                      ? `${(timelineEvents.length - 2) * 99 + 6}px` // Stops before the final step for rejected
+                      : '70px' // Default for other statuses
+                  }}
+                ></div>
+
+                {/* Red line segment for rejected disputes */}
+                {dispute.status === 'REJECTED' && (
+                  <div 
+                    className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
+                    style={{
+                      top: `${(timelineEvents.length - 2) * 99 + 12}px`, // Starts where blue line ends
+                      height: '93px' // Covers the final step
+                    }}
+                  ></div>
+                )}
+                
+                <div className="space-y-6">
+                  {timelineEvents.map((event, index) => (
+                    <div key={index} className="flex space-x-4 relative">
+                      {/* Timeline dot */}
+                      <div className="flex flex-col items-center relative z-10">
+                        <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
+                          // For PENDING: only first 2 milestones highlighted
+                          // For RESOLVED/REJECTED: all milestones highlighted
+                          dispute.status === 'PENDING' 
+                            ? (index < 2 ? 'bg-blue-500' : 'bg-gray-300')
+                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                            ? (index === timelineEvents.length - 1 && dispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
+                            : (index < 2 ? 'bg-blue-500' : 'bg-gray-300') // Default case
+                        }`}></div>
+                      </div>
+                      
+                      {/* Timeline content */}
+                      <div className="flex-1 pb-8">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className={`text-sm font-medium ${
+                            dispute.status === 'PENDING' 
+                              ? (index < 2 ? 'text-gray-900' : 'text-gray-400')
+                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                              ? 'text-gray-900'
+                              : (index < 2 ? 'text-gray-900' : 'text-gray-400')
+                          }`}>{event.title}</h4>
+                          {event.time && (
+                            // Only show time if milestone is not greyed out
+                            (dispute.status === 'PENDING' ? index < 2 : true) && (
+                              <span className={`text-xs ml-2 ${
+                                dispute.status === 'PENDING' 
+                                  ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                                  : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                                  ? 'text-gray-500'
+                                  : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                              }`}>{event.time}</span>
+                            )
+                          )}
+                        </div>
+                        {event.description && (
+                          <p className={`text-xs whitespace-pre-line ${
+                            dispute.status === 'PENDING' 
+                              ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                              ? 'text-gray-500'
+                              : (index < 2 ? 'text-gray-500' : 'text-gray-300')
+                          }`}>{event.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Modal */}
+          <Dialog open={isActionModalOpen} onOpenChange={setIsActionModalOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Dispute Action</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <RadioGroup value={selectedAction} onValueChange={(value) => setSelectedAction(value as 'reject' | 'resolve')} className="flex space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="reject" id="reject" />
+                    <Label htmlFor="reject">Reject</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="resolve" id="resolve" />
+                    <Label htmlFor="resolve">Resolve</Label>
+                  </div>
+                </RadioGroup>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="feedback">Feedback</Label>
+                  <Textarea
+                    id="feedback"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Enter your feedback..."
+                    className="w-full min-h-[100px] resize-none"
+                  />
+                </div>
+                
+                <Button onClick={handleSendAction} className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Send'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // Original layout for "Disputes Raised By Us"
+  return (
+    <TooltipProvider>
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header with back button and action buttons */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Header with back button and menu - full width */}
+        <div className="flex items-center justify-between mb-6">
           <Button 
             variant="ghost" 
             onClick={onBack} 
@@ -328,24 +614,15 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           >
             <ArrowLeft className="h-6 w-6" /> Back
           </Button>
-          {dispute.status !== 'RESOLVED' && dispute.status !== 'REJECTED' && (
-            <div className="flex space-x-3">
-              <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleActionClick('reject')}>
-                <X className="h-4 w-4" />
-                <span>Reject</span>
-              </Button>
-              <Button className="flex items-center space-x-2 bg-black text-white hover:bg-gray-800" onClick={() => handleActionClick('resolve')}>
-                <Check className="h-4 w-4" />
-                <span>Resolve</span>
-              </Button>
-            </div>
-          )}
+          <Button variant="ghost" size="icon">
+            <Menu className="h-6 w-6" />
+          </Button>
         </div>
 
         {/* Status Banner */}
         <StatusBanner />
 
-        {/* Dispute ID and Status */}
+        {/* Dispute ID and Status - full width */}
         <div className="space-y-2 mb-8">
           <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
           <div className="flex items-center space-x-4">
@@ -385,13 +662,23 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Attachments</span>
                   <div className="flex space-x-4">
-                    <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}>
                       <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                      <span className="text-xs">RAJESH MK.pdf</span>
+                      <span 
+                        className="text-xs cursor-pointer hover:text-blue-600"
+                        onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}
+                      >
+                        RAJESH MK.pdf
+                      </span>
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" className="flex items-center space-x-2" onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}>
                       <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                      <span className="text-xs">RAJESH MK.pdf</span>
+                      <span 
+                        className="text-xs cursor-pointer hover:text-blue-600"
+                        onClick={() => window.open('https://drive.google.com/file/d/1z_adbbg-kp_dOEhgtPNvtzjAuNjrg4cW/view?usp=sharing', '_blank')}
+                      >
+                        RAJESH MK.pdf
+                      </span>
                     </Button>
                   </div>
                 </div>
@@ -414,14 +701,27 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                            identifier.identity_type === 'EMAIL' ? 'Email address' :
                            identifier.identity_type}
                         </span>
-                        <span className="text-gray-900 font-medium">{identifier.identifier_id}</span>
+                        <span className="text-gray-900 font-medium max-w-[200px] truncate">{identifier.identifier_id}</span>
                       </div>
 
                       {/* Reason */}
                       <div className="flex justify-between items-center">
                         <span className="text-gray-500">Reason</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-900 font-medium">{identifier.reason}</span>
+                        <div className="flex items-center space-x-2 max-w-[200px]">
+                          {identifier.reason.length > 50 ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-gray-900 font-medium truncate">
+                                  {truncateText(identifier.reason)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p>{identifier.reason}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-gray-900 font-medium">{identifier.reason}</span>
+                          )}
                         </div>
                       </div>
 
@@ -529,251 +829,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
             </div>
           </div>
         </div>
-
-        {/* Action Modal */}
-        <Dialog open={isActionModalOpen} onOpenChange={setIsActionModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Dispute Action</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 py-4">
-              <RadioGroup value={selectedAction} onValueChange={(value) => setSelectedAction(value as 'reject' | 'resolve')} className="flex space-x-6">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="reject" id="reject" />
-                  <Label htmlFor="reject">Reject</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="resolve" id="resolve" />
-                  <Label htmlFor="resolve">Resolve</Label>
-                </div>
-              </RadioGroup>
-              
-              <div className="space-y-2">
-                <Label htmlFor="feedback">Feedback</Label>
-                <Textarea
-                  id="feedback"
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Enter your feedback..."
-                  className="w-full min-h-[100px] resize-none"
-                />
-              </div>
-              
-              <Button onClick={handleSendAction} className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Send'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
-    );
-  }
-
-  // Original layout for "Disputes Raised By Us"
-  return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header with back button and menu - full width */}
-      <div className="flex items-center justify-between mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={onBack} 
-          className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200"
-        >
-          <ArrowLeft className="h-6 w-6" /> Back
-        </Button>
-        <Button variant="ghost" size="icon">
-          <Menu className="h-6 w-6" />
-        </Button>
-      </div>
-
-      {/* Status Banner */}
-      <StatusBanner />
-
-      {/* Dispute ID and Status - full width */}
-      <div className="space-y-2 mb-8">
-        <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
-        <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-bold text-gray-900">{dispute.disputeId}</h2>
-          <div className="flex items-center gap-2">
-            <Badge 
-              className={`${getStatusColor(dispute.status)} text-xs font-bold`}
-              noHover
-            >
-              {dispute.status}
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[80px]">
-        {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Dispute Details Section */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Dispute Details</h3>
-            
-            <div className="space-y-6">
-              {/* Opened on */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Opened on</span>
-                <span className="text-gray-900 font-medium">{formatDate(dispute.createdAt)}</span>
-              </div>
-
-              {/* Criticality */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Criticality</span>
-                {getPriorityIcon(dispute.priority)}
-              </div>
-
-              {/* Attachments */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Attachments</span>
-                <div className="flex space-x-4">
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                    <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                    <span className="text-xs">RAJESH MK.pdf</span>
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                    <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                    <span className="text-xs">RAJESH MK.pdf</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Identity Details Section */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900">Identity Details</h3>
-            
-            <div className="space-y-6">
-              {dispute.identities && dispute.identities.length > 0 ? (
-                dispute.identities.map((identifier, index) => (
-                  <div key={index} className="space-y-4">
-                    {/* Identity Type and ID */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">
-                        {identifier.identity_type === 'PAN' ? 'Pan Number' : 
-                         identifier.identity_type === 'MOBILE' ? 'Phone number' :
-                         identifier.identity_type === 'EMAIL' ? 'Email address' :
-                         identifier.identity_type}
-                      </span>
-                      <span className="text-gray-900 font-medium">{identifier.identifier_id}</span>
-                    </div>
-
-                    {/* Reason */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Reason</span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-900 font-medium">{identifier.reason}</span>
-                      </div>
-                    </div>
-
-                    {/* Add separator between identifiers except for the last one */}
-                    {index < dispute.identities.length - 1 && (
-                      <hr className="border-gray-200" />
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500 text-sm">No identity details available</div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Timeline */}
-        <div className="lg:col-span-1">
-          <div className="relative">
-            {/* Base vertical line */}
-            <div 
-              className="absolute left-[6px] top-[6px] w-px bg-blue-200"
-              style={{
-                height: `${(timelineEvents.length - 1) * 99 + 6}px` // Stops at last timeline dot
-              }}
-            ></div>
-            
-            {/* Progress line - shows actual completion */}
-            <div 
-              className="absolute left-[6px] top-[6px] w-px bg-blue-500 transition-all duration-500"
-              style={{
-                height: dispute.status === 'PENDING' 
-                  ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
-                  : dispute.status === 'RESOLVED'
-                  ? `${(timelineEvents.length - 1) * 99 + 6}px` // Covers all steps for resolved
-                  : dispute.status === 'REJECTED'
-                  ? `${(timelineEvents.length - 2) * 99 + 6}px` // Stops before the final step for rejected
-                  : '70px' // Default for other statuses
-              }}
-            ></div>
-
-            {/* Red line segment for rejected disputes */}
-            {dispute.status === 'REJECTED' && (
-              <div 
-                className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
-                style={{
-                  top: `${(timelineEvents.length - 2) * 99 + 12}px`, // Starts where blue line ends
-                  height: '93px' // Covers the final step
-                }}
-              ></div>
-            )}
-            
-            <div className="space-y-6">
-              {timelineEvents.map((event, index) => (
-                <div key={index} className="flex space-x-4 relative">
-                  {/* Timeline dot */}
-                  <div className="flex flex-col items-center relative z-10">
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
-                      // For PENDING: only first 2 milestones highlighted
-                      // For RESOLVED/REJECTED: all milestones highlighted
-                      dispute.status === 'PENDING' 
-                        ? (index < 2 ? 'bg-blue-500' : 'bg-gray-300')
-                        : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                        ? (index === timelineEvents.length - 1 && dispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
-                        : (index < 2 ? 'bg-blue-500' : 'bg-gray-300') // Default case
-                    }`}></div>
-                  </div>
-                  
-                  {/* Timeline content */}
-                  <div className="flex-1 pb-8">
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className={`text-sm font-medium ${
-                        dispute.status === 'PENDING' 
-                          ? (index < 2 ? 'text-gray-900' : 'text-gray-400')
-                          : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                          ? 'text-gray-900'
-                          : (index < 2 ? 'text-gray-900' : 'text-gray-400')
-                      }`}>{event.title}</h4>
-                      {event.time && (
-                        // Only show time if milestone is not greyed out
-                        (dispute.status === 'PENDING' ? index < 2 : true) && (
-                          <span className={`text-xs ml-2 ${
-                            dispute.status === 'PENDING' 
-                              ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                              ? 'text-gray-500'
-                              : (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                          }`}>{event.time}</span>
-                        )
-                      )}
-                    </div>
-                    {event.description && (
-                      <p className={`text-xs whitespace-pre-line ${
-                        dispute.status === 'PENDING' 
-                          ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                          : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                          ? 'text-gray-500'
-                          : (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                      }`}>{event.description}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
