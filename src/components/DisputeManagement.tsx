@@ -35,6 +35,7 @@ export interface Dispute {
   createdAt: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   identities: Identifier[];
+  resolutionComment?: string; // Optional resolution comment from API report
 }
 
 const DisputeManagement = () => {
@@ -103,7 +104,8 @@ const DisputeManagement = () => {
       status: apiDispute.status as any,
       createdAt: apiDispute.raised_at,
       priority: 'Medium', // Default priority since API doesn't provide this
-      identities: apiDispute.identities || []
+      identities: apiDispute.identities || [],
+      resolutionComment: apiDispute.resolution_comments
     };
   };
 
@@ -140,6 +142,9 @@ const DisputeManagement = () => {
           : `${API_CONFIG.DISPUTES_HOSTNAME}${API_ENDPOINTS.GET_DISPUTES}?party_id=${emailDomain}`;
         
         const response = await fetch(baseUrl, {
+          headers: {
+            'ngrok-skip-browser-warning': '69420'
+          },
           signal: abortController.signal
         });
         

@@ -60,7 +60,7 @@ export interface NegativeRegistryEntry {
 }
 
 // Mock mode flag
-export const MOCK_MODE = true;
+export const MOCK_MODE = false;
 
 // Central Negative Registry - Demo data
 const CENTRAL_NEGATIVE_REGISTRY: NegativeRegistryEntry[] = [

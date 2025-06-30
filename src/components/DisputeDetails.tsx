@@ -49,6 +49,15 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
       reason: `Dispute regarding ${identifier.identity_type} ${identifier.identifier_id}` // Default reason since API doesn't provide it
     }));
 
+    // Extract resolution comment from report if available
+    let resolutionComment = '';
+    if (apiResponse.report && apiResponse.report.length > 0) {
+      const firstReport = apiResponse.report[0];
+      if (firstReport.report && firstReport.report.length > 0) {
+        resolutionComment = firstReport.report[0].resolution_comment || '';
+      }
+    }
+
     // Derive reason from identifiers
     const reason = identities.length > 0 
       ? identities.map(id => id.reason).join(', ')
@@ -63,7 +72,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
       status: apiResponse.status as any,
       createdAt: apiResponse.raised_at,
       priority: 'Medium', // Default priority
-      identities: identities
+      identities: identities,
+      resolutionComment: resolutionComment // Add resolution comment to the dispute object
     };
   };
 
@@ -89,6 +99,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         const response = await fetch(
           `${API_CONFIG.HOSTNAME}${API_ENDPOINTS.GET_DISPUTE_BY_ID}/${currentDispute.disputeId}?dispute_id=${currentDispute.disputeId}`,
           {
+            headers: {
+              'ngrok-skip-browser-warning': '69420'
+            },
             signal: abortController.signal
           }
         );
@@ -103,13 +116,41 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
           // Update current dispute
           const updatedDispute = convertSingleDisputeResponse(data);
+          
+          // Check for status changes BEFORE updating current dispute
+          const statusChanged = currentDispute.status !== updatedDispute.status;
+          const wasNotResolved = currentDispute.status === 'PENDING' || currentDispute.status === 'INFO_REQUESTED';
+          const isNowResolved = updatedDispute.status === 'RESOLVED' || updatedDispute.status === 'REJECTED';
+          
           setCurrentDispute(updatedDispute);
           
           // Update reports
+          console.log('API Response data.report:', data.report);
+          console.log('Setting disputeReports to:', data.report || []);
           setDisputeReports(data.report || []);
 
-          // Check for status changes
-          if (currentDispute.status !== updatedDispute.status) {
+          // Show banner immediately if status changed from pending to resolved/rejected
+          if (statusChanged && wasNotResolved && isNowResolved) {
+            const resolutionComment = updatedDispute.resolutionComment || 'Status updated';
+            
+            // Show immediate toast notification
+            toast({
+              title: `Dispute ${updatedDispute.status.toLowerCase()}`,
+              description: resolutionComment,
+              variant: updatedDispute.status === 'RESOLVED' ? 'default' : 'destructive',
+              duration: 4000,
+            });
+
+            // Show persistent banner with resolution comment from API
+            setStatusBanner({
+              show: true,
+              status: updatedDispute.status as 'RESOLVED' | 'REJECTED',
+              reason: resolutionComment,
+            });
+          }
+
+          // Update previous status for future comparisons
+          if (statusChanged) {
             setPreviousStatus(currentDispute.status);
           }
         } else {
@@ -148,24 +189,22 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
 
   // Detect status changes and show notifications/banners
   useEffect(() => {
+    // This effect is now primarily for initial load or manual actions
+    // Real-time polling status changes are handled in fetchDisputeDetails
     if (previousStatus === 'PENDING' && (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')) {
-      // Show timed notification (3 seconds)
-      toast({
-        title: `Dispute ${currentDispute.status.toLowerCase()}`,
-        description: currentDispute.reason || `Dispute has been ${currentDispute.status.toLowerCase()}`,
-        variant: currentDispute.status === 'RESOLVED' ? 'default' : 'destructive',
-        duration: 3000,
-      });
-
-      // Show persistent banner
-      setStatusBanner({
-        show: true,
-        status: currentDispute.status as 'RESOLVED' | 'REJECTED',
-        reason: currentDispute.reason || `Dispute has been ${currentDispute.status.toLowerCase()}`,
-      });
+      // Only show banner if we don't already have one (avoid duplicates from polling)
+      if (!statusBanner?.show) {
+        const resolutionComment = currentDispute.resolutionComment || currentDispute.reason || `Dispute has been ${currentDispute.status.toLowerCase()}`;
+        
+        setStatusBanner({
+          show: true,
+          status: currentDispute.status as 'RESOLVED' | 'REJECTED',
+          reason: resolutionComment,
+        });
+      }
     }
     setPreviousStatus(currentDispute.status);
-  }, [currentDispute.status, currentDispute.reason, previousStatus, toast]);
+  }, [currentDispute.status, currentDispute.resolutionComment, previousStatus, statusBanner?.show]);
 
   // Banner component
   const StatusBanner = () => {
@@ -282,6 +321,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420'
           },
           body: JSON.stringify(requestBody)
         });
@@ -607,89 +647,100 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               </div>
 
               {/* Resolution Report Section */}
-              {disputeReports && disputeReports.length > 0 && (
+              {(currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED') && (
                 <div className="space-y-6">
                   <h3 className="text-xl font-semibold text-gray-900">Resolution Report</h3>
                   
-                  <div className="space-y-6">
-                    {disputeReports.map((reportIdentity, identityIndex) => (
-                      <div key={identityIndex} className="space-y-4">
-                        {/* Identity Header */}
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">
-                            {reportIdentity.identity_type === 'PAN' ? 'Pan Number' : 
-                             reportIdentity.identity_type === 'MOBILE' ? 'Phone number' :
-                             reportIdentity.identity_type === 'EMAIL' ? 'Email address' :
-                             reportIdentity.identity_type}
-                          </span>
-                          <span className="text-gray-900 font-medium">{reportIdentity.identity}</span>
-                        </div>
+                  {disputeReports && disputeReports.length > 0 ? (
+                    <div className="space-y-6">
+                      {disputeReports.map((reportIdentity, identityIndex) => (
+                        <div key={identityIndex} className="space-y-4">
+                          {/* Identity Header */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">
+                              {reportIdentity.identity_type === 'PAN' ? 'Pan Number' : 
+                               reportIdentity.identity_type === 'MOBILE' ? 'Phone number' :
+                               reportIdentity.identity_type === 'EMAIL' ? 'Email address' :
+                               reportIdentity.identity_type}
+                            </span>
+                            <span className="text-gray-900 font-medium">{reportIdentity.identity}</span>
+                          </div>
 
-                        {/* Report Entries */}
-                        {reportIdentity.report && reportIdentity.report.map((reportEntry, reportIndex) => (
-                          <div key={reportIndex} className="bg-gray-50 rounded-lg p-4 space-y-4">
-                            {/* Raised By */}
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Resolved by</span>
-                              <span className="text-gray-900 font-medium uppercase">{reportEntry.raised_by}</span>
-                            </div>
-
-                            {/* Resolution Comment */}
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Resolution Comment</span>
-                              <div className="flex items-center space-x-2 max-w-[200px]">
-                                {reportEntry.resolution_comment.length > 50 ? (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="text-gray-900 font-medium truncate">
-                                        {truncateText(reportEntry.resolution_comment)}
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs">
-                                      <p>{reportEntry.resolution_comment}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ) : (
-                                  <span className="text-gray-900 font-medium">{reportEntry.resolution_comment}</span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Resolution Attachments */}
-                            {reportEntry.resolution_attachments && reportEntry.resolution_attachments.length > 0 && (
+                          {/* Report Entries */}
+                          {reportIdentity.report && reportIdentity.report.map((reportEntry, reportIndex) => (
+                            <div key={reportIndex} className="bg-gray-50 rounded-lg p-4 space-y-4">
+                              {/* Raised By */}
                               <div className="flex justify-between items-center">
-                                <span className="text-gray-500">Resolution Attachments</span>
-                                <div className="flex space-x-4">
-                                  {reportEntry.resolution_attachments.map((attachment, attachIndex) => (
-                                    <Button 
-                                      key={attachIndex}
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="flex items-center space-x-2" 
-                                      onClick={() => window.open(attachment.url, '_blank')}
-                                    >
-                                      <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
-                                      <span 
-                                        className="text-xs cursor-pointer hover:text-blue-600"
-                                        onClick={() => window.open(attachment.url, '_blank')}
-                                      >
-                                        {attachment.type} Document
-                                      </span>
-                                    </Button>
-                                  ))}
+                                <span className="text-gray-500">Resolved by</span>
+                                <span className="text-gray-900 font-medium uppercase">{reportEntry.raised_by}</span>
+                              </div>
+
+                              {/* Resolution Comment */}
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-500">Resolution Comment</span>
+                                <div className="flex items-center space-x-2 max-w-[200px]">
+                                  {reportEntry.resolution_comment.length > 50 ? (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="text-gray-900 font-medium truncate">
+                                          {truncateText(reportEntry.resolution_comment)}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p>{reportEntry.resolution_comment}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  ) : (
+                                    <span className="text-gray-900 font-medium">{reportEntry.resolution_comment}</span>
+                                  )}
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
 
-                        {/* Add separator between different identities */}
-                        {identityIndex < disputeReports.length - 1 && (
-                          <hr className="border-gray-200" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                              {/* Resolution Attachments */}
+                              {reportEntry.resolution_attachments && reportEntry.resolution_attachments.length > 0 && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-gray-500">Resolution Attachments</span>
+                                  <div className="flex space-x-4">
+                                    {reportEntry.resolution_attachments.map((attachment, attachIndex) => (
+                                      <Button 
+                                        key={attachIndex}
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="flex items-center space-x-2" 
+                                        onClick={() => window.open(attachment.url, '_blank')}
+                                      >
+                                        <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
+                                        <span 
+                                          className="text-xs cursor-pointer hover:text-blue-600"
+                                          onClick={() => window.open(attachment.url, '_blank')}
+                                        >
+                                          {attachment.type} Document
+                                        </span>
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+
+                          {/* Add separator between different identities */}
+                          {identityIndex < disputeReports.length - 1 && (
+                            <hr className="border-gray-200" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-500 text-sm">
+                        {currentDispute.status === 'RESOLVED' 
+                          ? 'Dispute has been resolved. Resolution details will appear here when available.'
+                          : 'Dispute has been rejected. Resolution details will appear here when available.'
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -972,6 +1023,104 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 )}
               </div>
             </div>
+
+            {/* Resolution Report Section */}
+            {(currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED') && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-gray-900">Resolution Report</h3>
+                
+                {disputeReports && disputeReports.length > 0 ? (
+                  <div className="space-y-6">
+                    {disputeReports.map((reportIdentity, identityIndex) => (
+                      <div key={identityIndex} className="space-y-4">
+                        {/* Identity Header */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">
+                            {reportIdentity.identity_type === 'PAN' ? 'Pan Number' : 
+                             reportIdentity.identity_type === 'MOBILE' ? 'Phone number' :
+                             reportIdentity.identity_type === 'EMAIL' ? 'Email address' :
+                             reportIdentity.identity_type}
+                          </span>
+                          <span className="text-gray-900 font-medium">{reportIdentity.identity}</span>
+                        </div>
+
+                        {/* Report Entries */}
+                        {reportIdentity.report && reportIdentity.report.map((reportEntry, reportIndex) => (
+                          <div key={reportIndex} className="bg-gray-50 rounded-lg p-4 space-y-4">
+                            {/* Raised By */}
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500">Resolved by</span>
+                              <span className="text-gray-900 font-medium uppercase">{reportEntry.raised_by}</span>
+                            </div>
+
+                            {/* Resolution Comment */}
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500">Resolution Comment</span>
+                              <div className="flex items-center space-x-2 max-w-[200px]">
+                                {reportEntry.resolution_comment.length > 50 ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-gray-900 font-medium truncate">
+                                        {truncateText(reportEntry.resolution_comment)}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>{reportEntry.resolution_comment}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <span className="text-gray-900 font-medium">{reportEntry.resolution_comment}</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Resolution Attachments */}
+                            {reportEntry.resolution_attachments && reportEntry.resolution_attachments.length > 0 && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-500">Resolution Attachments</span>
+                                <div className="flex space-x-4">
+                                  {reportEntry.resolution_attachments.map((attachment, attachIndex) => (
+                                    <Button 
+                                      key={attachIndex}
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="flex items-center space-x-2" 
+                                      onClick={() => window.open(attachment.url, '_blank')}
+                                    >
+                                      <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
+                                      <span 
+                                        className="text-xs cursor-pointer hover:text-blue-600"
+                                        onClick={() => window.open(attachment.url, '_blank')}
+                                      >
+                                        {attachment.type} Document
+                                      </span>
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Add separator between different identities */}
+                        {identityIndex < disputeReports.length - 1 && (
+                          <hr className="border-gray-200" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-500 text-sm">
+                      {currentDispute.status === 'RESOLVED' 
+                        ? 'Dispute has been resolved. Resolution details will appear here when available.'
+                        : 'Dispute has been rejected. Resolution details will appear here when available.'
+                      }
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right Column - Timeline */}
