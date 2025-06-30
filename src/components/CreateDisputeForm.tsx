@@ -50,16 +50,6 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
     }
   }, [isOpen]);
 
-  const addIdentifier = () => {
-    setIdentifiers([...identifiers, { identifier_id: '', identity_type: '', reason: '' }]);
-  };
-
-  const removeIdentifier = (index: number) => {
-    if (identifiers.length > 1) {
-      setIdentifiers(identifiers.filter((_, i) => i !== index));
-    }
-  };
-
   const updateIdentifier = (index: number, field: keyof IdentifierObject, value: string) => {
     const updated = identifiers.map((identifier, i) => 
       i === index ? { ...identifier, [field]: value } : identifier
@@ -216,19 +206,8 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
             <div key={index} className="space-y-4 p-4 border border-gray-200 rounded-lg">
               <div className="flex justify-between items-center">
                 <h4 className="font-medium text-gray-900">
-                  Identifier {index + 1}
+                  Add Identifier Details
                 </h4>
-                {identifiers.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeIdentifier(index)}
-                    className="px-2"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
 
               <div className="space-y-4">
@@ -273,18 +252,6 @@ const CreateDisputeForm = ({ isOpen, onSubmit, onCancel, onSuccess }: CreateDisp
               </div>
             </div>
           ))}
-
-          <div className="flex justify-start">
-            <Button
-              type="button"
-              onClick={addIdentifier}
-              variant="outline"
-              className="font-medium border border-gray-200 rounded-md"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Identifier
-            </Button>
-          </div>
 
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900">Add attachments</h4>

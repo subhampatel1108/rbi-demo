@@ -456,6 +456,17 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                           </div>
                         </div>
 
+                        {/* Status */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">Status</span>
+                          <Badge 
+                            className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                            noHover
+                          >
+                            {dispute.status}
+                          </Badge>
+                        </div>
+
                         {/* Add separator between identifiers except for the last one */}
                         {index < dispute.identities.length - 1 && (
                           <hr className="border-gray-200" />
@@ -723,6 +734,17 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                             <span className="text-gray-900 font-medium">{identifier.reason}</span>
                           )}
                         </div>
+                      </div>
+
+                      {/* Status */}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Status</span>
+                        <Badge 
+                          className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                          noHover
+                        >
+                          {dispute.status}
+                        </Badge>
                       </div>
 
                       {/* Add separator between identifiers except for the last one */}
