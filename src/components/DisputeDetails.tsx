@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dispute } from '@/components/DisputeManagement';
 import { API_CONFIG, API_ENDPOINTS } from '@/constants';
-import { MOCK_MODE, mockUpdateDisputeStatus } from '@/utils/mockData';
+import { MOCK_MODE, mockUpdateDisputeStatus, SingleDisputeResponse } from '@/utils/mockData';
 
 interface DisputeDetailsProps {
   dispute: Dispute;
@@ -25,6 +25,8 @@ interface DisputeDetailsProps {
 const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionComplete }: DisputeDetailsProps) => {
   const { email, emailDomain } = useAuth();
   const { toast } = useToast();
+  const [currentDispute, setCurrentDispute] = useState<Dispute>(dispute);
+  const [disputeReports, setDisputeReports] = useState<any[]>([]);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<'reject' | 'resolve'>('resolve');
   const [feedback, setFeedback] = useState('');
@@ -35,27 +37,135 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
     status: 'RESOLVED' | 'REJECTED';
     reason: string;
   } | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Convert single dispute API response to our internal Dispute format
+  const convertSingleDisputeResponse = (apiResponse: SingleDisputeResponse): Dispute => {
+    // Convert identifiers to include reason field
+    const identities = apiResponse.identifiers.map(identifier => ({
+      identifier_id: identifier.identifier_id,
+      identity_type: identifier.identity_type,
+      reason: `Dispute regarding ${identifier.identity_type} ${identifier.identifier_id}` // Default reason since API doesn't provide it
+    }));
+
+    // Derive reason from identifiers
+    const reason = identities.length > 0 
+      ? identities.map(id => id.reason).join(', ')
+      : 'Dispute reason not available';
+
+    return {
+      id: apiResponse.dispute_id,
+      disputeId: apiResponse.dispute_id,
+      reportId: apiResponse.dispute_id,
+      reason: reason,
+      description: reason,
+      status: apiResponse.status as any,
+      createdAt: apiResponse.raised_at,
+      priority: 'Medium', // Default priority
+      identities: identities
+    };
+  };
+
+  // Fetch specific dispute details
+  const fetchDisputeDetails = async () => {
+    if (!currentDispute.disputeId) return;
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    try {
+      if (MOCK_MODE) {
+        // For mock mode, keep using the current dispute data
+        // In real implementation, you'd have a mock function for single dispute
+        return;
+      } else {
+        // Real API call
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
+        const response = await fetch(
+          `${API_CONFIG.HOSTNAME}${API_ENDPOINTS.GET_DISPUTE_BY_ID}/${currentDispute.disputeId}?dispute_id=${currentDispute.disputeId}`,
+          {
+            signal: abortController.signal
+          }
+        );
+
+        if (response.ok) {
+          const data: SingleDisputeResponse = await response.json();
+          
+          // Check if request is still current
+          if (abortController.signal.aborted || abortControllerRef.current !== abortController) {
+            return;
+          }
+
+          // Update current dispute
+          const updatedDispute = convertSingleDisputeResponse(data);
+          setCurrentDispute(updatedDispute);
+          
+          // Update reports
+          setDisputeReports(data.report || []);
+
+          // Check for status changes
+          if (currentDispute.status !== updatedDispute.status) {
+            setPreviousStatus(currentDispute.status);
+          }
+        } else {
+          console.error('Failed to fetch dispute details:', response.statusText);
+        }
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('Dispute details request aborted');
+      } else {
+        console.error('Error fetching dispute details:', error);
+      }
+    }
+  };
+
+  // Set up polling for dispute details
+  useEffect(() => {
+    // Initial fetch
+    fetchDisputeDetails();
+
+    // Set up polling every 5 seconds
+    if (!MOCK_MODE) {
+      intervalRef.current = setInterval(fetchDisputeDetails, 5000);
+    }
+
+    // Cleanup
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [currentDispute.disputeId]);
 
   // Detect status changes and show notifications/banners
   useEffect(() => {
-    if (previousStatus === 'PENDING' && (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')) {
+    if (previousStatus === 'PENDING' && (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')) {
       // Show timed notification (3 seconds)
       toast({
-        title: `Dispute ${dispute.status.toLowerCase()}`,
-        description: dispute.reason || `Dispute has been ${dispute.status.toLowerCase()}`,
-        variant: dispute.status === 'RESOLVED' ? 'default' : 'destructive',
+        title: `Dispute ${currentDispute.status.toLowerCase()}`,
+        description: currentDispute.reason || `Dispute has been ${currentDispute.status.toLowerCase()}`,
+        variant: currentDispute.status === 'RESOLVED' ? 'default' : 'destructive',
         duration: 3000,
       });
 
       // Show persistent banner
       setStatusBanner({
         show: true,
-        status: dispute.status as 'RESOLVED' | 'REJECTED',
-        reason: dispute.reason || `Dispute has been ${dispute.status.toLowerCase()}`,
+        status: currentDispute.status as 'RESOLVED' | 'REJECTED',
+        reason: currentDispute.reason || `Dispute has been ${currentDispute.status.toLowerCase()}`,
       });
     }
-    setPreviousStatus(dispute.status);
-  }, [dispute.status, dispute.reason, previousStatus, toast]);
+    setPreviousStatus(currentDispute.status);
+  }, [currentDispute.status, currentDispute.reason, previousStatus, toast]);
 
   // Banner component
   const StatusBanner = () => {
@@ -103,18 +213,36 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
       return;
     }
 
+    // Get the first (and only) identity since we now have single identity per dispute
+    const identity = currentDispute.identities?.[0];
+    if (!identity) {
+      toast({
+        title: "Error",
+        description: "No identity found for this dispute",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const requestBody = {
-        party_id: emailDomain,
+        identity_id: identity.identifier_id,
+        identity_type: identity.identity_type,
         status: selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED',
+        party_id: emailDomain, // The party resolving the dispute
         resolution_comments: feedback.trim()
       };
 
       if (MOCK_MODE) {
-        // Use mock API
-        const result = mockUpdateDisputeStatus(dispute.disputeId, requestBody);
+        // Use mock API (keeping the old format for mock compatibility)
+        const mockRequestBody = {
+          party_id: emailDomain,
+          status: selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED',
+          resolution_comments: feedback.trim()
+        };
+        const result = mockUpdateDisputeStatus(currentDispute.disputeId, mockRequestBody);
         
         if (result.success) {
           // Show immediate success notification
@@ -149,8 +277,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           });
         }
       } else {
-        // Real API call
-        const response = await fetch(`${API_CONFIG.HOSTNAME}/disputes/${dispute.disputeId}/status`, {
+        // Real API call with correct format
+        const response = await fetch(`${API_CONFIG.HOSTNAME}/disputes/${currentDispute.disputeId}/status`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -164,15 +292,14 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           // Show immediate success notification
           toast({
             title: "Success",
-            description: `Dispute ${selectedAction === 'resolve' ? 'resolved' : 'rejected'} successfully`,
+            description: result.message || `Dispute ${selectedAction === 'resolve' ? 'resolved' : 'rejected'} successfully`,
             variant: "info"
           });
           
-          // If API returns a reason, use it for the banner
-          const newStatus = selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED';
-          const reason = result.reason || feedback.trim();
-          
           // Update banner with new status
+          const newStatus = selectedAction === 'resolve' ? 'RESOLVED' : 'REJECTED';
+          const reason = feedback.trim();
+          
           setStatusBanner({
             show: true,
             status: newStatus as 'RESOLVED' | 'REJECTED',
@@ -295,29 +422,29 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
     {
       title: "Source Bank Decision",
       time: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 03:30 PM",
-      description: dispute.status === 'RESOLVED' 
+      description: currentDispute.status === 'RESOLVED' 
         ? "Source bank accepted dispute"
-        : dispute.status === 'REJECTED'
+        : currentDispute.status === 'REJECTED'
         ? "Source bank rejected dispute"
         : "Source bank reviewing dispute",
       status: "completed",
       color: "bg-blue-500"
     },
     {
-      title: dispute.status === 'RESOLVED' 
+      title: currentDispute.status === 'RESOLVED' 
         ? "Dispute Resolved" 
-        : dispute.status === 'REJECTED'
+        : currentDispute.status === 'REJECTED'
         ? "Dispute Rejected"
         : "Dispute Resolution Pending",
-      time: dispute.status === 'RESOLVED' || dispute.status === 'REJECTED' 
+      time: currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED' 
         ? new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", 04:45 PM"
         : "",
-      description: dispute.status === 'RESOLVED' 
+      description: currentDispute.status === 'RESOLVED' 
         ? "Decision communicated to bank\nDispute successfully resolved"
-        : dispute.status === 'REJECTED'
+        : currentDispute.status === 'REJECTED'
         ? "Decision communicated to bank\nDispute rejected by source bank"
         : "",
-      status: dispute.status === 'RESOLVED' || dispute.status === 'REJECTED' ? "completed" : "pending",
+      status: currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED' ? "completed" : "pending",
       color: "bg-blue-500"
     }
   ];
@@ -336,7 +463,7 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
             >
               <ArrowLeft className="h-6 w-6" /> Back
             </Button>
-            {dispute.status !== 'RESOLVED' && dispute.status !== 'REJECTED' && (
+            {currentDispute.status !== 'RESOLVED' && currentDispute.status !== 'REJECTED' && (
               <div className="flex space-x-3">
                 <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleActionClick('reject')}>
                   <X className="h-4 w-4" />
@@ -357,13 +484,13 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
           <div className="space-y-2 mb-8">
             <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
             <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-bold text-gray-900">{dispute.disputeId}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{currentDispute.disputeId}</h2>
               <div className="flex items-center gap-2">
                 <Badge 
-                  className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                  className={`${getStatusColor(currentDispute.status)} text-xs font-bold`}
                   noHover
                 >
-                  {dispute.status}
+                  {currentDispute.status}
                 </Badge>
               </div>
             </div>
@@ -380,13 +507,13 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   {/* Opened on */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Opened on</span>
-                    <span className="text-gray-900 font-medium">{formatDate(dispute.createdAt)}</span>
+                    <span className="text-gray-900 font-medium">{formatDate(currentDispute.createdAt)}</span>
                   </div>
 
                   {/* Criticality */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Criticality</span>
-                    {getPriorityIcon(dispute.priority)}
+                    {getPriorityIcon(currentDispute.priority)}
                   </div>
 
                   {/* Attachments */}
@@ -421,8 +548,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <h3 className="text-xl font-semibold text-gray-900">Identity Details</h3>
                 
                 <div className="space-y-6">
-                  {dispute.identities && dispute.identities.length > 0 ? (
-                    dispute.identities.map((identifier, index) => (
+                  {currentDispute.identities && currentDispute.identities.length > 0 ? (
+                    currentDispute.identities.map((identifier, index) => (
                       <div key={index} className="space-y-4">
                         {/* Identity Type and ID */}
                         <div className="flex justify-between items-center">
@@ -460,15 +587,15 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                         <div className="flex justify-between items-center">
                           <span className="text-gray-500">Status</span>
                           <Badge 
-                            className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                            className={`${getStatusColor(currentDispute.status)} text-xs font-bold`}
                             noHover
                           >
-                            {dispute.status}
+                            {currentDispute.status}
                           </Badge>
                         </div>
 
                         {/* Add separator between identifiers except for the last one */}
-                        {index < dispute.identities.length - 1 && (
+                        {index < currentDispute.identities.length - 1 && (
                           <hr className="border-gray-200" />
                         )}
                       </div>
@@ -478,6 +605,93 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                   )}
                 </div>
               </div>
+
+              {/* Resolution Report Section */}
+              {disputeReports && disputeReports.length > 0 && (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold text-gray-900">Resolution Report</h3>
+                  
+                  <div className="space-y-6">
+                    {disputeReports.map((reportIdentity, identityIndex) => (
+                      <div key={identityIndex} className="space-y-4">
+                        {/* Identity Header */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500">
+                            {reportIdentity.identity_type === 'PAN' ? 'Pan Number' : 
+                             reportIdentity.identity_type === 'MOBILE' ? 'Phone number' :
+                             reportIdentity.identity_type === 'EMAIL' ? 'Email address' :
+                             reportIdentity.identity_type}
+                          </span>
+                          <span className="text-gray-900 font-medium">{reportIdentity.identity}</span>
+                        </div>
+
+                        {/* Report Entries */}
+                        {reportIdentity.report && reportIdentity.report.map((reportEntry, reportIndex) => (
+                          <div key={reportIndex} className="bg-gray-50 rounded-lg p-4 space-y-4">
+                            {/* Raised By */}
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500">Resolved by</span>
+                              <span className="text-gray-900 font-medium uppercase">{reportEntry.raised_by}</span>
+                            </div>
+
+                            {/* Resolution Comment */}
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500">Resolution Comment</span>
+                              <div className="flex items-center space-x-2 max-w-[200px]">
+                                {reportEntry.resolution_comment.length > 50 ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-gray-900 font-medium truncate">
+                                        {truncateText(reportEntry.resolution_comment)}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>{reportEntry.resolution_comment}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <span className="text-gray-900 font-medium">{reportEntry.resolution_comment}</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Resolution Attachments */}
+                            {reportEntry.resolution_attachments && reportEntry.resolution_attachments.length > 0 && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-500">Resolution Attachments</span>
+                                <div className="flex space-x-4">
+                                  {reportEntry.resolution_attachments.map((attachment, attachIndex) => (
+                                    <Button 
+                                      key={attachIndex}
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="flex items-center space-x-2" 
+                                      onClick={() => window.open(attachment.url, '_blank')}
+                                    >
+                                      <img src="/pdfIcon.png" alt="PDF" className="h-4 w-4" />
+                                      <span 
+                                        className="text-xs cursor-pointer hover:text-blue-600"
+                                        onClick={() => window.open(attachment.url, '_blank')}
+                                      >
+                                        {attachment.type} Document
+                                      </span>
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Add separator between different identities */}
+                        {identityIndex < disputeReports.length - 1 && (
+                          <hr className="border-gray-200" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Column - Timeline */}
@@ -495,18 +709,18 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 <div 
                   className="absolute left-[6px] top-[6px] w-px bg-blue-500 transition-all duration-500"
                   style={{
-                    height: dispute.status === 'PENDING' 
+                    height: currentDispute.status === 'PENDING' 
                       ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
-                      : dispute.status === 'RESOLVED'
+                      : currentDispute.status === 'RESOLVED'
                       ? `${(timelineEvents.length - 1) * 99 + 6}px` // Covers all steps for resolved
-                      : dispute.status === 'REJECTED'
+                      : currentDispute.status === 'REJECTED'
                       ? `${(timelineEvents.length - 2) * 99 + 6}px` // Stops before the final step for rejected
                       : '70px' // Default for other statuses
                   }}
                 ></div>
 
                 {/* Red line segment for rejected disputes */}
-                {dispute.status === 'REJECTED' && (
+                {currentDispute.status === 'REJECTED' && (
                   <div 
                     className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
                     style={{
@@ -524,10 +738,10 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                         <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
                           // For PENDING: only first 2 milestones highlighted
                           // For RESOLVED/REJECTED: all milestones highlighted
-                          dispute.status === 'PENDING' 
+                          currentDispute.status === 'PENDING' 
                             ? (index < 2 ? 'bg-blue-500' : 'bg-gray-300')
-                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                            ? (index === timelineEvents.length - 1 && dispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
+                            : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
+                            ? (index === timelineEvents.length - 1 && currentDispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
                             : (index < 2 ? 'bg-blue-500' : 'bg-gray-300') // Default case
                         }`}></div>
                       </div>
@@ -536,19 +750,19 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                       <div className="flex-1 pb-8">
                         <div className="flex justify-between items-start mb-1">
                           <h4 className={`text-sm font-medium ${
-                            dispute.status === 'PENDING' 
+                            currentDispute.status === 'PENDING' 
                               ? (index < 2 ? 'text-gray-900' : 'text-gray-400')
-                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                              : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
                               ? 'text-gray-900'
                               : (index < 2 ? 'text-gray-900' : 'text-gray-400')
                           }`}>{event.title}</h4>
                           {event.time && (
                             // Only show time if milestone is not greyed out
-                            (dispute.status === 'PENDING' ? index < 2 : true) && (
+                            (currentDispute.status === 'PENDING' ? index < 2 : true) && (
                               <span className={`text-xs ml-2 ${
-                                dispute.status === 'PENDING' 
+                                currentDispute.status === 'PENDING' 
                                   ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                                  : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                                  : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
                                   ? 'text-gray-500'
                                   : (index < 2 ? 'text-gray-500' : 'text-gray-300')
                               }`}>{event.time}</span>
@@ -557,9 +771,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                         </div>
                         {event.description && (
                           <p className={`text-xs whitespace-pre-line ${
-                            dispute.status === 'PENDING' 
+                            currentDispute.status === 'PENDING' 
                               ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                              : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                              : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
                               ? 'text-gray-500'
                               : (index < 2 ? 'text-gray-500' : 'text-gray-300')
                           }`}>{event.description}</p>
@@ -637,13 +851,13 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
         <div className="space-y-2 mb-8">
           <h1 className="text-sm font-medium text-gray-500">Dispute ID</h1>
           <div className="flex items-center space-x-4">
-            <h2 className="text-2xl font-bold text-gray-900">{dispute.disputeId}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{currentDispute.disputeId}</h2>
             <div className="flex items-center gap-2">
               <Badge 
-                className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                className={`${getStatusColor(currentDispute.status)} text-xs font-bold`}
                 noHover
               >
-                {dispute.status}
+                {currentDispute.status}
               </Badge>
             </div>
           </div>
@@ -660,13 +874,13 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                 {/* Opened on */}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Opened on</span>
-                  <span className="text-gray-900 font-medium">{formatDate(dispute.createdAt)}</span>
+                  <span className="text-gray-900 font-medium">{formatDate(currentDispute.createdAt)}</span>
                 </div>
 
                 {/* Criticality */}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Criticality</span>
-                  {getPriorityIcon(dispute.priority)}
+                  {getPriorityIcon(currentDispute.priority)}
                 </div>
 
                 {/* Attachments */}
@@ -701,8 +915,8 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               <h3 className="text-xl font-semibold text-gray-900">Identity Details</h3>
               
               <div className="space-y-6">
-                {dispute.identities && dispute.identities.length > 0 ? (
-                  dispute.identities.map((identifier, index) => (
+                {currentDispute.identities && currentDispute.identities.length > 0 ? (
+                  currentDispute.identities.map((identifier, index) => (
                     <div key={index} className="space-y-4">
                       {/* Identity Type and ID */}
                       <div className="flex justify-between items-center">
@@ -740,15 +954,15 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                       <div className="flex justify-between items-center">
                         <span className="text-gray-500">Status</span>
                         <Badge 
-                          className={`${getStatusColor(dispute.status)} text-xs font-bold`}
+                          className={`${getStatusColor(currentDispute.status)} text-xs font-bold`}
                           noHover
                         >
-                          {dispute.status}
+                          {currentDispute.status}
                         </Badge>
                       </div>
 
                       {/* Add separator between identifiers except for the last one */}
-                      {index < dispute.identities.length - 1 && (
+                      {index < currentDispute.identities.length - 1 && (
                         <hr className="border-gray-200" />
                       )}
                     </div>
@@ -775,18 +989,18 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
               <div 
                 className="absolute left-[6px] top-[6px] w-px bg-blue-500 transition-all duration-500"
                 style={{
-                  height: dispute.status === 'PENDING' 
+                  height: currentDispute.status === 'PENDING' 
                     ? '140px' // Covers first 2 steps (Dispute Raised + RBI Receives)
-                    : dispute.status === 'RESOLVED'
+                    : currentDispute.status === 'RESOLVED'
                     ? `${(timelineEvents.length - 1) * 99 + 6}px` // Covers all steps for resolved
-                    : dispute.status === 'REJECTED'
+                    : currentDispute.status === 'REJECTED'
                     ? `${(timelineEvents.length - 2) * 99 + 6}px` // Stops before the final step for rejected
                     : '70px' // Default for other statuses
                 }}
               ></div>
 
               {/* Red line segment for rejected disputes */}
-              {dispute.status === 'REJECTED' && (
+              {currentDispute.status === 'REJECTED' && (
                 <div 
                   className="absolute left-[6px] w-px bg-red-500 transition-all duration-500"
                   style={{
@@ -804,10 +1018,10 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                       <div className={`w-3 h-3 rounded-full flex-shrink-0 border-2 border-white ${
                         // For PENDING: only first 2 milestones highlighted
                         // For RESOLVED/REJECTED: all milestones highlighted
-                        dispute.status === 'PENDING' 
+                        currentDispute.status === 'PENDING' 
                           ? (index < 2 ? 'bg-blue-500' : 'bg-gray-300')
-                          : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
-                          ? (index === timelineEvents.length - 1 && dispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
+                          : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
+                          ? (index === timelineEvents.length - 1 && currentDispute.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500')
                           : (index < 2 ? 'bg-blue-500' : 'bg-gray-300') // Default case
                       }`}></div>
                     </div>
@@ -816,19 +1030,19 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                     <div className="flex-1 pb-8">
                       <div className="flex justify-between items-start mb-1">
                         <h4 className={`text-sm font-medium ${
-                          dispute.status === 'PENDING' 
+                          currentDispute.status === 'PENDING' 
                             ? (index < 2 ? 'text-gray-900' : 'text-gray-400')
-                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                            : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
                             ? 'text-gray-900'
                             : (index < 2 ? 'text-gray-900' : 'text-gray-400')
                         }`}>{event.title}</h4>
                         {event.time && (
                           // Only show time if milestone is not greyed out
-                          (dispute.status === 'PENDING' ? index < 2 : true) && (
+                          (currentDispute.status === 'PENDING' ? index < 2 : true) && (
                             <span className={`text-xs ml-2 ${
-                              dispute.status === 'PENDING' 
+                              currentDispute.status === 'PENDING' 
                                 ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                                : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                                : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
                                 ? 'text-gray-500'
                                 : (index < 2 ? 'text-gray-500' : 'text-gray-300')
                             }`}>{event.time}</span>
@@ -837,9 +1051,9 @@ const DisputeDetails = ({ dispute, onBack, activeTab = 'raised-by-us', onActionC
                       </div>
                       {event.description && (
                         <p className={`text-xs whitespace-pre-line ${
-                          dispute.status === 'PENDING' 
+                          currentDispute.status === 'PENDING' 
                             ? (index < 2 ? 'text-gray-500' : 'text-gray-300')
-                            : (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED')
+                            : (currentDispute.status === 'RESOLVED' || currentDispute.status === 'REJECTED')
                             ? 'text-gray-500'
                             : (index < 2 ? 'text-gray-500' : 'text-gray-300')
                         }`}>{event.description}</p>

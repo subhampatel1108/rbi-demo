@@ -25,4 +25,5 @@ export const API_ENDPOINTS = {
   UPDATE_DISPUTE: '/update',
   GET_DISPUTES: '/disputes',
   GET_ASSIGNED_DISPUTES: '/disputes/assigned',
+  GET_DISPUTE_BY_ID: '/disputes', // /disputes/DISPUTE123?dispute_id=${disputeId}
 } as const; 

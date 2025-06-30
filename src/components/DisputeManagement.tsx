@@ -89,15 +89,20 @@ const DisputeManagement = () => {
   };
 
   const convertApiDisputeToDispute = (apiDispute: ApiDispute): Dispute => {
+    // Derive reason from identities since API response doesn't have top-level reason
+    const reason = apiDispute.identities && apiDispute.identities.length > 0 
+      ? apiDispute.identities.map(id => id.reason).join(', ')
+      : 'Dispute reason not available';
+
     return {
       id: apiDispute.dispute_id,
       disputeId: apiDispute.dispute_id,
       reportId: apiDispute.dispute_id,
-      reason: apiDispute.reason,
-      description: apiDispute.reason,
+      reason: reason,
+      description: reason,
       status: apiDispute.status as any,
       createdAt: apiDispute.raised_at,
-      priority: apiDispute.priority || 'Medium',
+      priority: 'Medium', // Default priority since API doesn't provide this
       identities: apiDispute.identities || []
     };
   };

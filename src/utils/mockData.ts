@@ -8,11 +8,8 @@ export interface ApiIdentifier {
 export interface ApiDispute {
   dispute_id: string;
   raised_by_party_id: string;
-  raised_against_party_id: string;
-  reason: string;
   status: string;
   raised_at: string;
-  priority: 'Low' | 'Medium' | 'High';
   identities: ApiIdentifier[];
   resolution_comments?: string;
 }
@@ -20,6 +17,39 @@ export interface ApiDispute {
 export interface ApiResponse {
   disputes: ApiDispute[];
   total_count: number;
+}
+
+// Single dispute detail API response interfaces
+export interface SingleDisputeIdentifier {
+  identifier_id: string;
+  identity_type: string;
+}
+
+export interface ResolutionAttachment {
+  type: string;
+  url: string;
+}
+
+export interface ReportEntry {
+  raised_by: string;
+  resolution_comment: string;
+  resolution_attachments: ResolutionAttachment[];
+}
+
+export interface ReportIdentity {
+  identity: string;
+  identity_type: string;
+  report: ReportEntry[];
+}
+
+export interface SingleDisputeResponse {
+  dispute_id: string;
+  raised_by_party_id: string;
+  identifiers: SingleDisputeIdentifier[];
+  report: ReportIdentity[];
+  status: string;
+  raised_at: string;
+  updated_at: string;
 }
 
 // Central Negative Registry Interface
@@ -174,11 +204,8 @@ export const mockCreateDispute = (disputeData: {
     const newDispute: ApiDispute = {
       dispute_id: generateDisputeId(),
       raised_by_party_id: disputeData.raised_by_party_id,
-      raised_against_party_id: targetParty,
-      reason: disputeData.identifier.map(id => id.reason).join(', '),
       status: 'PENDING',
       raised_at: new Date().toISOString(),
-      priority: 'Medium',
       identities: disputeData.identifier
     };
     
@@ -205,14 +232,29 @@ export const mockGetDisputes = (partyId: string): ApiResponse => {
   };
 };
 
-// Mock API: Get Assigned Disputes (Raised against us)
+// Mock API: Get Disputes (Raised against us)
 export const mockGetAssignedDisputes = (partyId: string): ApiResponse => {
   initializeLocalStorage();
   
   const disputes = getStoredDisputes();
-  const filteredDisputes = disputes.filter(dispute => 
-    dispute.raised_against_party_id === partyId
+  const registry: NegativeRegistryEntry[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.NEGATIVE_REGISTRY) || '[]'
   );
+  
+  // Filter disputes where any of the identities were originally flagged by this party
+  const filteredDisputes = disputes.filter(dispute => {
+    // Skip disputes raised by the same party
+    if (dispute.raised_by_party_id === partyId) return false;
+    
+    // Check if any identity in this dispute was originally flagged by this party
+    return dispute.identities.some(identity => {
+      const registryEntry = registry.find(entry => 
+        entry.identifier_id === identity.identifier_id && 
+        entry.identifier_type === identity.identity_type
+      );
+      return registryEntry && registryEntry.initial_flag_by === partyId;
+    });
+  });
   
   return {
     disputes: filteredDisputes,
@@ -233,7 +275,6 @@ export const mockUpdateDisputeStatus = (disputeId: string, updateData: {
   
   if (disputeIndex !== -1) {
     disputes[disputeIndex].status = updateData.status;
-    disputes[disputeIndex].reason = updateData.resolution_comments;
     disputes[disputeIndex].resolution_comments = updateData.resolution_comments;
     
     saveDisputes(disputes);
